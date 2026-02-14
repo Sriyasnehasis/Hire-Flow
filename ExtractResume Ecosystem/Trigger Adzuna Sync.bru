@@ -1,0 +1,11 @@
+meta {
+  name: Trigger Adzuna Sync
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/jobs/sync-adzuna
+  body: none
+  auth: inherit
+}
