@@ -1,0 +1,22 @@
+meta {
+  name: Upload Resume
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8000/jobs/analyze-resume
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "resume_text": "SRIYA SNEHASIS | 🔗 linkedin.com/in/sriyasnehasis | 💻 github.com/sriyasnehasis | B.Tech in Computer Science and Engineering (pursuing) | Amity University Mumbai | CGPA: 9.30 | Tech Stack: Python, TensorFlow, OpenCV, Streamlit, Grad-CAM, PostgreSQL, MongoDB | Experience: DeepCytes Cyber Labs (UK) - Machine Learning Research & API Development | Projects: Diabetic Retinopathy Detection, Virtual-Try-On System, Traffic Volume Analysis."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

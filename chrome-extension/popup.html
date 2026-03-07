@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { width: 300px; font-family: 'Segoe UI', sans-serif; padding: 15px; }
+    button { width: 100%; padding: 10px; margin-bottom: 8px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; }
+    #analyzeBtn { background: #0073b1; color: white; }
+    #uploadBtn { background: #28a745; color: white; }
+    #dashboardBtn { background: #6f42c1; color: white; }
+    .status { font-size: 12px; text-align: center; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h3>ExtractResume AI</h3>
+  <button id="analyzeBtn">Analyze this LinkedIn Job</button>
+  <div id="result" class="status"></div>
+  <hr>
+  <input type="file" id="resumeUpload" style="display:none" accept=".pdf,.docx,.txt" />
+  <button id="uploadBtn">Upload Resume (PDF/DOCX)</button>
+  <div id="uploadStatus" class="status"></div>
+  <hr>
+  <button id="dashboardBtn">Open Career Dashboard</button>
+  <script src="popup.js"></script>
+</body>
+</html>

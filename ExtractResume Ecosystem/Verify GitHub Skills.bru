@@ -1,0 +1,15 @@
+meta {
+  name: Verify GitHub Skills
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/jobs/verify-skills
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
