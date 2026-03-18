@@ -6,38 +6,52 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultDiv = document.getElementById("result");
   const uploadStatus = document.getElementById("uploadStatus");
 
+  // New element for showing the mini-score card
+  const analysisResultCard = document.getElementById("analysisResult");
+
+  const API_BASE = "http://localhost:8000";
+
   // --- 1. ANALYSIS & SAVE LOGIC ---
   const performAnalysis = async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // Ensure we are actually on LinkedIn
-    if (!tab.url || !tab.url.includes("linkedin.com")) {
-      resultDiv.innerText = "Please open a LinkedIn job page.";
+    // Validate LinkedIn URL
+    if (!tab.url || !tab.url.includes("linkedin.com/jobs")) {
+      resultDiv.innerText = "⚠️ Please open a LinkedIn Job post.";
+      resultDiv.style.color = "orange";
       return;
     }
 
-    resultDiv.innerText = "Extracting job data...";
+    resultDiv.innerText = "🔍 Extracting job data...";
+    analysisResultCard.style.display = "none";
 
+    // Request data from content.js
     chrome.tabs.sendMessage(tab.id, { action: "getJobData" }, async (response) => {
       if (chrome.runtime.lastError || !response) {
-        resultDiv.innerText = "Error: Refresh LinkedIn and try again.";
+        resultDiv.innerText = "❌ Error: Refresh LinkedIn and try again.";
         return;
       }
 
       try {
-        // Fetch User Profile to get resume text
-        const userRes = await fetch("http://localhost:8000/auth/user/1");
+        // A. Verify user has a resume uploaded
+        const userRes = await fetch(`${API_BASE}/auth/user/1`);
+        if (!userRes.ok) {
+          resultDiv.innerText = "❌ Backend error. Is the API running?";
+          resultDiv.style.color = "red";
+          return;
+        }
         const userData = await userRes.json();
 
         if (!userData.resume_text) {
-          resultDiv.innerText = "Upload a resume first!";
+          resultDiv.innerText = "📄 Please upload your resume first!";
+          resultDiv.style.color = "orange";
           return;
         }
 
-        resultDiv.innerText = "Saving & Analyzing...";
+        resultDiv.innerText = "⚙️ Processing AI Match...";
 
-        // 1. SAVE to PostgreSQL (Key-Value Storage)
-        await fetch("http://localhost:8000/jobs/save-job", {
+        // B. Save the Scraped Job to PostgreSQL
+        const saveRes = await fetch(`${API_BASE}/jobs/save-job`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -50,8 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
           })
         });
 
-        // 2. GET AI Match Score
-        const aiRes = await fetch("http://localhost:8000/jobs/analyze-resume", {
+        if (!saveRes.ok) {
+          console.error("Save job failed:", await saveRes.text());
+          resultDiv.innerText = "⚠️ Could not save job. Backend error.";
+          return;
+        }
+
+        // C. Trigger AI Analysis
+        const aiRes = await fetch(`${API_BASE}/jobs/analyze-resume`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -60,62 +80,78 @@ document.addEventListener('DOMContentLoaded', () => {
           })
         });
 
+        if (!aiRes.ok) {
+          console.error("Analysis failed:", await aiRes.text());
+          resultDiv.innerText = "⚠️ Backend offline. Is FastAPI running?";
+          return;
+        }
+
         let result = await aiRes.json();
+        // Handle double-stringified JSON if the backend sends it that way
         if (typeof result === 'string') result = JSON.parse(result);
 
         if (result && result.score !== undefined) {
-          resultDiv.innerHTML = `
-            <div style="margin-top:10px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #f9f9f9;">
-              <strong style="color: #0073b1;">ATS Match: ${result.score}%</strong><br>
-              <span style="font-size:11px; color:#28a745;">Saved: ${response.company || 'Job'}</span>
-              <p style="font-size:11px; color:#555; margin-top:5px;">${result.feedback || ""}</p>
+          resultDiv.innerText = "✅ Analysis Complete!";
+          
+          // D. Show the Mini-Score Card
+          analysisResultCard.style.display = "block";
+          analysisResultCard.innerHTML = `
+            <div style="text-align:center;">
+              <span style="font-size: 24px; font-weight: bold; color: #0073b1;">${result.score}%</span>
+              <div style="font-size: 12px; font-weight: 600; color: #555;">ATS MATCH SCORE</div>
+            </div>
+            <div style="margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px;">
+              <small><strong>Insights:</strong> ${result.feedback || "Check the dashboard for details."}</small>
             </div>
           `;
         }
       } catch (error) {
         console.error("Popup Error:", error);
-        resultDiv.innerText = "Backend offline. Check FastAPI.";
+        resultDiv.innerText = "🔴 Backend offline. Is FastAPI running?";
       }
     });
   };
 
-  // --- 2. BUTTON ASSIGNMENTS ---
-  if (analyzeBtn) analyzeBtn.onclick = performAnalysis;
-
+  // --- 2. RESUME UPLOAD LOGIC ---
   if (uploadBtn && fileInput) {
     uploadBtn.onclick = () => fileInput.click();
+    
     fileInput.onchange = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
 
-      uploadStatus.style.color = "blue";
-      uploadStatus.innerText = "Uploading...";
+      uploadStatus.style.color = "#0073b1";
+      uploadStatus.innerText = "⏳ Uploading resume...";
 
       const formData = new FormData();
       formData.append("file", file);
 
       try {
-        const res = await fetch("http://localhost:8000/auth/user/1/resume", {
+        const res = await fetch(`${API_BASE}/auth/user/1/resume`, {
           method: "POST",
           body: formData
         });
 
         if (res.ok) {
           uploadStatus.style.color = "green";
-          uploadStatus.innerText = "✅ Upload Success!";
-          performAnalysis(); // Re-analyze automatically
+          uploadStatus.innerText = "✅ Resume Synced!";
+          performAnalysis(); // Automatically start analysis with the new resume
         } else {
           uploadStatus.innerText = "❌ Upload failed.";
         }
       } catch (err) {
-        uploadStatus.innerText = "Connection error.";
+        uploadStatus.innerText = "❌ Connection Error.";
       }
     };
   }
 
+  // --- 3. DASHBOARD NAVIGATION ---
   if (dashboardBtn) {
     dashboardBtn.onclick = () => {
-      chrome.tabs.create({ url: 'dashboard.html' });
+      chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
     };
   }
+
+  // Assign the main action
+  if (analyzeBtn) analyzeBtn.onclick = performAnalysis;
 });

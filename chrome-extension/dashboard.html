@@ -3,69 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <title>ExtractResume AI | Career Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+     <script src="chart.js"></script>
     <style>
-        :root { --primary: #0073b1; --success: #28a745; --bg: #f4f7f9; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 40px; }
-        .dashboard-container { max-width: 1100px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        :root { 
+            --primary: #0073b1; /* LinkedIn Blue */
+            --success: #1e8e3e; /* Professional Green */
+            --danger: #d93025;  /* Professional Red */
+            --bg: #f3f2ef; 
+            --text: #333;
+        }
+
+        body { 
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 20px; 
+            color: var(--text);
+        }
+
+        .dashboard-container { 
+            max-width: 1100px; 
+            margin: auto; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 25px; 
+        }
+
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            border: 1px solid #e0e0e0;
+        }
+
         .full-width { grid-column: 1 / -1; }
-        
-        h2, h3 { color: #333; margin-top: 0; }
+
+        h2, h3, h4 { margin-top: 0; color: #000; }
         #userName { color: var(--primary); }
+
+        /* --- Skill Gap Badge Styling --- */
+        .pill-container { margin: 10px 0 20px 0; display: flex; flex-wrap: wrap; gap: 8px; }
         
-        .skill-item { background: #fee2e2; color: #991b1b; padding: 8px 12px; border-radius: 20px; display: inline-block; margin: 5px; font-size: 13px; font-weight: bold; }
+        .pill { 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .matched { 
+            background: #e6f4ea; 
+            color: var(--success); 
+            border: 1px solid var(--success); 
+        }
+
+        .missing { 
+            background: #fce8e6; 
+            color: var(--danger); 
+            border: 1px solid var(--danger); 
+        }
+
+        .feedback-box { 
+            background: #f8f9fa; 
+            border-left: 4px solid var(--primary); 
+            padding: 15px; 
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        /* --- Job Recommendation List Styling --- */
+        .job-card { 
+            border-bottom: 1px solid #eee; 
+            padding: 15px 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .job-card:last-child { border-bottom: none; }
         
-        /* Job Card Styling */
-        .job-card { border: 1px solid #eee; padding: 15px; margin-bottom: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
-        .job-info h4 { margin: 0; color: #333; }
-        .job-info p { margin: 4px 0; font-size: 13px; color: #666; }
-        .apply-btn { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .job-info h4 { margin-bottom: 5px; font-size: 16px; }
+        .job-info p { margin: 0; font-size: 13px; color: #666; }
         
-        select, button.bulk-apply { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px solid #ddd; }
-        #applyBtn { background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold; }
-        #status { margin-top: 15px; text-align: center; font-weight: bold; }
+        .score-badge { 
+            font-weight: bold; 
+            color: var(--success); 
+            font-size: 18px;
+        }
+
+        select, #applyBtn { 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 10px; 
+            border-radius: 6px; 
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        #applyBtn { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        #applyBtn:hover { background: #005582; }
     </style>
 </head>
 <body>
 
     <div class="dashboard-container">
         <div class="card full-width">
-            <h2>Welcome back, <span id="userName">User</span>!</h2>
-            <p>Your AI-driven career insights and job matches are ready.</p>
+            <h2>Welcome back, <span id="userName">Career Explorer</span>!</h2>
+            <p>Your profile is being analyzed against live LinkedIn opportunities.</p>
         </div>
 
         <div class="card">
-            <h3>Skills Proficiency</h3>
+            <h3>Overall Market Proficiency</h3>
             <div style="height: 350px;">
                 <canvas id="skillsChart"></canvas>
             </div>
         </div>
 
         <div class="card">
-            <h3>Optimize Your Profile</h3>
-            <p>Identified skill gaps to work on:</p>
-            <div id="missingSkillsContainer">
-                <span class="skill-item">Loading analysis...</span>
+            <h3>ATS Skill Gap Analysis</h3>
+            <div id="aiFeedback" class="feedback-box">
+                Analyzing your latest job scrape...
             </div>
+            
+            <h4>✅ Matched Skills</h4>
+            <div id="matchedSkills" class="pill-container">
+                </div>
+
+            <h4>❌ Missing Skills</h4>
+            <div id="missingSkills" class="pill-container">
+                </div>
             
             <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
             
-            <label><strong>One-Click Bulk Apply:</strong></label>
+            <label><strong>Instant Job Outreach:</strong></label>
             <select id="domainSelect">
-                <option value="Python Developer">Python Developer</option>
-                <option value="React Developer">React Developer</option>
-                <option value="Frontend">Frontend Roles</option>
-                <option value="Backend">Backend Roles</option>
+                <option value="Python Developer">Python Developer Roles</option>
+                <option value="React Developer">React Developer Roles</option>
+                <option value="Full Stack">Full Stack Roles</option>
+                <option value="Data Analyst">Data Analyst Roles</option>
             </select>
-            <button id="applyBtn">Apply to All Matches</button>
+            <button id="applyBtn">Apply to Relevant Matches</button>
             <div id="status"></div>
         </div>
 
         <div class="card full-width">
-            <h3>Smart Match Opportunities (Scraped from LinkedIn)</h3>
+            <h3>Smart Match Recommendations</h3>
             <div id="jobMatches">
-                <p>Finding matching jobs in your database...</p>
+                <p>Syncing with your PostgreSQL database...</p>
             </div>
         </div>
     </div>

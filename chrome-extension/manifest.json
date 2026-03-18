@@ -1,8 +1,14 @@
 {
   "manifest_version": 3,
   "name": "ExtractResume AI",
-  "version": "1.1",
-  "permissions": ["activeTab", "scripting", "tabs"],
+  "version": "1.2.0",
+  "description": "AI-powered LinkedIn job scraper and resume skill gap analyzer.",
+  "permissions": [
+    "activeTab", 
+    "scripting", 
+    "tabs", 
+    "storage"
+  ],
   "host_permissions": [
     "https://www.linkedin.com/*",
     "http://localhost:8000/*"
@@ -14,13 +20,20 @@
         "https://www.linkedin.com/jobs/view/*",
         "https://www.linkedin.com/jobs/search/*"
       ],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_idle"
     }
   ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; connect-src http://localhost:8000"
   },
-  "action": {
-    "default_popup": "popup.html"
-  }
+  "web_accessible_resources": [
+    {
+      "resources": ["dashboard.html", "dashboard.js" , "chart.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

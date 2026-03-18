@@ -1,12 +1,17 @@
 import re
 
 async def get_ats_score(resume_text: str, job_description: str):
-    # Normalize text: lowercase and remove special characters for better matching
+    # Safety checks
+    if not resume_text or not isinstance(resume_text, str):
+        resume_text = ""
+    if not job_description or not isinstance(job_description, str):
+        job_description = ""
+    
+    # Normalize text
     resume_text = resume_text.lower()
     job_description = job_description.lower()
 
     # 1. Define Expanded Skill Categories
-    # We use a dictionary where the key is the Category and value is a list of synonyms
     categories = {
         "Frontend": ["react", "javascript", "js", "next.js", "nextjs", "html", "css", "tailwind", "typescript", "ts"],
         "Backend": ["fastapi", "python", "docker", "node", "nodejs", "django", "flask", "golang", "rust"],
@@ -15,46 +20,40 @@ async def get_ats_score(resume_text: str, job_description: str):
         "AI_ML": ["machine learning", "ml", "ai", "pytorch", "tensorflow", "nlp", "scikit-learn", "pandas", "numpy"]
     }
 
-    # 2. Calculate Resume Proficiency (Radar Chart Data)
+    # 2. Calculate Radar Chart Data (Your Profile Strength)
     chart_data = {}
-    resume_words = set(re.findall(r'\w+', resume_text))
-    
     for cat, skills in categories.items():
-        # Check if any synonym exists in the resume
         found = [s for s in skills if s in resume_text]
-        # We cap the score at 100% based on unique category matches
-        # Using a simplified weight: (Unique skills found / total skills in cat)
+        # Calculate percentage of category skills present in resume
         chart_data[cat] = int((len(set(found)) / len(skills)) * 100) if skills else 0
 
-    # 3. Standard ATS Scoring against Job Description
-    # Extract all potential keywords from the JD
+    # 3. Identify Skills required by the Job (Keyword Extraction)
     all_tech_keywords = [skill for sublist in categories.values() for skill in sublist]
     
-    # Identify which tech keywords are actually mentioned in the JD
-    required_in_jd = [word for word in all_tech_keywords if word in job_description]
-    # Remove duplicates from synonyms (e.g., if JD says 'Postgres' and 'PostgreSQL')
-    required_in_jd = list(set(required_in_jd))
+    # Skills the JD actually asks for
+    required_in_jd = list(set([word for word in all_tech_keywords if word in job_description]))
     
-    if not required_in_jd:
-        return {
-            "score": 75, # Default baseline for general interest
-            "missing_skills": [], 
-            "chart_data": chart_data, 
-            "feedback": "Job description is general. Radar chart reflects your core profile."
-        }
-
     # Compare JD requirements to Resume
-    matching_skills = [skill for skill in required_in_jd if skill in resume_text]
+    matched_skills = [skill for skill in required_in_jd if skill in resume_text]
     missing_skills = [skill for skill in required_in_jd if skill not in resume_text]
     
-    score_val = (len(matching_skills) / len(required_in_jd)) * 100
+    # Calculate Score
+    if not required_in_jd:
+        score_val = 70  # Baseline
+    else:
+        score_val = (len(matched_skills) / len(required_in_jd)) * 100
     
-    result = {
+    # 4. Generate AI Feedback Text
+    feedback = f"You match {len(matched_skills)} key skills. "
+    if missing_skills:
+        feedback += f"To improve your chances, consider adding {missing_skills[0]} and {missing_skills[1]} to your resume."
+    else:
+        feedback += "Your profile is an excellent match for this technical stack!"
+
+    return {
         "score": int(score_val),
-        "missing_skills": missing_skills[:10], # Limit to top 10 gaps
+        "matched_skills": matched_skills,
+        "missing_skills": missing_skills,
         "chart_data": chart_data,
-        "feedback": f"Match found for {len(matching_skills)} out of {len(required_in_jd)} identified requirements."
+        "feedback": feedback
     }
-    
-    print(f"ANALYSIS COMPLETE: ATS Score {result['score']}%")
-    return result
