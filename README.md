@@ -57,24 +57,43 @@ docker-compose up -d
 
 #### Backend Setup
 
+**Windows (PowerShell) — recommended:**
+
+```powershell
+cd backend
+
+# Run the setup script (handles venv creation, activation, and dependency install)
+.\setup.ps1
+
+# Activate the virtual environment
+.\venv\Scripts\Activate.ps1
+
+# Copy and configure environment variables
+Copy-Item .env.example .env
+
+# Start backend server
+python -m uvicorn app.main:app --reload
+```
+
+> **Note:** If you see a PowerShell execution policy error, run:
+> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+
+**Linux / macOS:**
+
 ```bash
 cd backend
 
-# Create virtual environment
-python -m venv venv
-.\venv\Scripts\Activate.ps1
+# Run the setup script (handles venv creation and dependency install)
+bash setup.sh
 
-# Install dependencies
-pip install -r requirements.txt
+# Activate the virtual environment
+source venv/bin/activate
 
-# Create .env file
+# Copy and configure environment variables
 cp .env.example .env
 
-# Run migrations (if using Alembic)
-# alembic upgrade head
-
-# Start backend
-uvicorn app.main:app --reload
+# Start backend server
+python -m uvicorn app.main:app --reload
 ```
 
 #### Frontend Setup
@@ -343,6 +362,67 @@ GET    /api/v1/hr-contacts
 ---
 
 ## 🐛 Troubleshooting
+
+### Permission Denied When Creating venv (Windows)
+
+```
+Error: [Errno 13] Permission denied: '...\backend\venv\Scripts\python.exe'
+```
+
+This happens when the existing `venv` directory is locked by another process (e.g., VS Code, a running terminal, or the Python process itself).
+
+**Fix:**
+
+1. Close VS Code and all terminals that are inside the `backend` directory.
+2. Use the provided setup script which automatically deletes the old venv and recreates it:
+
+   ```powershell
+   cd backend
+   .\setup.ps1
+   ```
+
+   Or, manually delete the venv and recreate:
+
+   ```powershell
+   Remove-Item -Recurse -Force venv
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+
+3. If deletion still fails, open Task Manager and kill any `python.exe` processes, then retry.
+
+### No module named uvicorn
+
+```
+No module named uvicorn
+```
+
+This means `uvicorn` (and likely all backend dependencies) are not installed in your current Python environment. You need to activate the virtual environment first, then install:
+
+```powershell
+# Windows
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+```bash
+# Linux / macOS
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Alternatively, run `uvicorn` through the venv Python directly (no need to activate):
+
+```powershell
+# Windows
+.\venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+```bash
+# Linux / macOS
+venv/bin/python -m uvicorn app.main:app --reload
+```
 
 ### Database Connection Issues
 
