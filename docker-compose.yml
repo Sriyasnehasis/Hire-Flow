@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: extractresume_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-extractresume_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-extractresume_password}
+      POSTGRES_DB: ${POSTGRES_DB:-extractresume_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - extractresume_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U extractresume_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB (for raw scrape data)
+  mongodb:
+    image: mongo:7.0
+    container_name: extractresume_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-extractresume}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-extractresume_password}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - extractresume_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for caching & session management)
+  redis:
+    image: redis:7-alpine
+    container_name: extractresume_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - extractresume_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: extractresume_backend
+    environment:
+      POSTGRES_URL: postgresql://${POSTGRES_USER:-extractresume_user}:${POSTGRES_PASSWORD:-extractresume_password}@postgres:5432/${POSTGRES_DB:-extractresume_db}
+      MONGO_URL: mongodb://${MONGO_USER:-extractresume}:${MONGO_PASSWORD:-extractresume_password}@mongodb:27017
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ADZUNA_API_KEY: ${ADZUNA_API_KEY}
+      ADZUNA_APP_ID: ${ADZUNA_APP_ID}
+      DEBUG: ${DEBUG:-True}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - extractresume_network
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: extractresume_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    networks:
+      - extractresume_network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Nginx Reverse Proxy (optional, for production-like setup)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: extractresume_nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf
+  #   depends_on:
+  #     - backend
+  #     - frontend
+  #   networks:
+  #     - extractresume_network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+
+networks:
+  extractresume_network:
+    driver: bridge

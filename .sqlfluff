@@ -1,0 +1,12 @@
+[sqlfluff]
+dialect = postgres
+max_line_length = 88
+indent_unit = space
+indent_size = 2
+
+[sqlfluff:indentation]
+indentation_size = 2
+
+[sqlfluff:rules]
+allow_scalar = True
+capitalisation_policy = upper

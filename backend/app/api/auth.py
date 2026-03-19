@@ -1,29 +1,151 @@
 import httpx
 import os
 import io
+from typing import Optional
+
 import pdfplumber
 from docx import Document
-from fastapi import APIRouter, Request, Depends, UploadFile, File # Added UploadFile and File
-from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
-from app.core.db import get_db
-from app.models.user import User
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.core.db import get_db
+from app.core.security import security_service
+from app.core.config import settings
+from app.models.user import User
+from app.schemas import UserSignUp, UserLogin, TokenResponse, UserResponse
+
 
 load_dotenv()
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+# ==================== EMAIL/PASSWORD AUTH ====================
+
+@router.post("/signup", response_model=TokenResponse)
+def signup(payload: UserSignUp, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.email == payload.email).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is already registered",
+        )
+
+    password_hash = security_service.hash_password(payload.password)
+
+    user = User(
+        email=payload.email,
+        password_hash=password_hash,
+        full_name=payload.full_name,
+        phone=payload.phone,
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    access_token = security_service.create_access_token({"sub": str(user.id)})
+    refresh_token = security_service.create_refresh_token({"sub": str(user.id)})
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+
+
+@router.post("/login", response_model=TokenResponse)
+def login(payload: UserLogin, db: Session = Depends(get_db)):
+    user: Optional[User] = db.query(User).filter(User.email == payload.email).first()
+    if not user or not user.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    if not security_service.verify_password(payload.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    access_token = security_service.create_access_token({"sub": str(user.id)})
+    refresh_token = security_service.create_refresh_token({"sub": str(user.id)})
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_tokens(payload: RefreshTokenRequest, db: Session = Depends(get_db)):
+    try:
+        token_data = security_service.verify_token(payload.refresh_token)
+    except HTTPException:
+        # verify_token already raises a 401; just re-raise
+        raise
+
+    user_id = token_data.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+        )
+
+    user: Optional[User] = db.query(User).filter(User.id == int(user_id)).first()
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User inactive or not found",
+        )
+
+    access_token = security_service.create_access_token({"sub": str(user.id)})
+    refresh_token = security_service.create_refresh_token({"sub": str(user.id)})
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+
+
+@router.get("/me", response_model=UserResponse)
+def get_me(
+    current_user_id: int = Depends(security_service.get_user_from_token),
+    db: Session = Depends(get_db),
+):
+    user: Optional[User] = db.query(User).filter(User.id == current_user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return user
+
+
+# ==================== GITHUB OAUTH AUTH (EXISTING) ====================
+
 CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 
-@router.get("/login")
+
+@router.get("/github/login")
 async def github_login():
     """Step 1: Send user to GitHub to ask for permission"""
     return RedirectResponse(
         f"https://github.com/login/oauth/authorize?client_id={CLIENT_ID}&scope=repo"
     )
 
-@router.get("/callback")
+
+@router.get("/github/callback")
 async def github_callback(code: str, db: Session = Depends(get_db)):
     """Step 2: Exchange code for token and save user to database"""
     async with httpx.AsyncClient() as client:
@@ -46,31 +168,32 @@ async def github_callback(code: str, db: Session = Depends(get_db)):
         # 2. Use the token to fetch the user's GitHub profile
         user_res = await client.get(
             "https://api.github.com/user",
-            headers={"Authorization": f"token {access_token}"}
+            headers={"Authorization": f"token {access_token}"},
         )
         profile = user_res.json()
 
         # 3. Check if user exists in PostgreSQL; if not, create them
-        user = db.query(User).filter(User.github_id == str(profile['id'])).first()
-        
+        user = db.query(User).filter(User.github_id == str(profile["id"])).first()
+
         if not user:
             user = User(
-                github_id=str(profile['id']),
-                username=profile['login'],
-                access_token=access_token
+                github_id=str(profile["id"]),
+                username=profile["login"],
+                access_token=access_token,
             )
             db.add(user)
         else:
             # Update the token if the user is returning
             user.access_token = access_token
-        
+
         db.commit()
         return {
             "status": "success",
             "message": f"Welcome {user.username}!",
-            "github_id": user.github_id
+            "github_id": user.github_id,
         }
-    
+
+
 @router.get("/user/{user_id}")
 async def get_user_details(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -78,21 +201,26 @@ async def get_user_details(user_id: int, db: Session = Depends(get_db)):
         return {"error": "User not found"}
     return {
         "username": user.username,
-        "resume_text": user.resume_text
+        "resume_text": user.resume_text,
     }
 
+
 @router.post("/user/{user_id}/resume")
-async def upload_resume(user_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_resume(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
     # 1. Check file size (e.g., max 5MB)
-    if file.size > 5 * 1024 * 1024:
+    if hasattr(file, "size") and file.size is not None and file.size > 5 * 1024 * 1024:
         return {"error": "File too large. Maximum size is 5MB."}
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return {"error": "User not found"}
-    
+
     file_content = await file.read()
-    await file.close()  # Good practice to close the file stream
+    await file.close()
     filename = file.filename.lower()
     extracted_text = ""
 
@@ -100,15 +228,17 @@ async def upload_resume(user_id: int, file: UploadFile = File(...), db: Session 
         # 3. Parse based on file type
         if filename.endswith(".pdf"):
             with pdfplumber.open(io.BytesIO(file_content)) as pdf:
-                extracted_text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
-        
+                extracted_text = "\n".join(
+                    page.extract_text() for page in pdf.pages if page.extract_text()
+                )
+
         elif filename.endswith(".docx"):
             doc = Document(io.BytesIO(file_content))
             extracted_text = "\n".join([para.text for para in doc.paragraphs])
-            
+
         elif filename.endswith(".txt"):
             extracted_text = file_content.decode("utf-8")
-            
+
         else:
             return {"error": "Unsupported file format. Please use PDF, DOCX, or TXT."}
 
@@ -118,10 +248,15 @@ async def upload_resume(user_id: int, file: UploadFile = File(...), db: Session 
         # 4. Save extracted text to the database profile
         user.resume_text = extracted_text
         db.commit()
-        
-        print(f"SUCCESS: Processed {filename} for {user.username}. Length: {len(extracted_text)}")
-        return {"message": "Resume processed and uploaded successfully!", "username": user.username}
 
-    except Exception as e:
+        print(
+            f"SUCCESS: Processed {filename} for {user.username}. Length: {len(extracted_text)}"
+        )
+        return {
+            "message": "Resume processed and uploaded successfully!",
+            "username": user.username,
+        }
+
+    except Exception as e:  # pragma: no cover - defensive logging
         print(f"ERROR processing file: {str(e)}")
         return {"error": f"Failed to process document: {str(e)}"}

@@ -1,0 +1,21 @@
+import '@/styles/globals.css'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'ExtractResume AI - Placement Assistant',
+  description: 'AI-powered placement preparation & job application automation',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className="antialiased">
+        {children}
+      </body>
+    </html>
+  )
+}
