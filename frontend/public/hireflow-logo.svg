@@ -1,0 +1,23 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle (Optional, for favicon/app icon) -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="#2563EB" stroke-width="2"/>
+  
+  <!-- Main Flow Element: Curved Arrow -->
+  <!-- Outer spiral/flow curve -->
+  <path d="M 100 140 Q 130 130 140 100 Q 145 80 130 60 Q 110 40 85 45" 
+        fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Arrow head pointing upward -->
+  <polygon points="85,45 78,60 92,55" fill="#2563EB"/>
+  
+  <!-- Inner flow accent (lighter) -->
+  <path d="M 100 130 Q 120 122 128 105 Q 130 90 120 75 Q 105 60 90 62" 
+        fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- Center dot (represents user/starting point) -->
+  <circle cx="100" cy="140" r="4" fill="#2563EB"/>
+  
+  <!-- HireFlow text (optional, can be added or used separately) -->
+  <text x="100" y="180" font-family="Arial, sans-serif" font-size="14" font-weight="bold" 
+        text-anchor="middle" fill="#2563EB">HireFlow</text>
+</svg>

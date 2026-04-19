@@ -1,6 +1,7 @@
 import httpx
 import os
 import io
+import sys
 from typing import Optional
 
 import pdfplumber
@@ -22,6 +23,12 @@ load_dotenv()
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
+@router.post("/test")
+def test_endpoint(data: dict):
+    """Simple test endpoint"""
+    return {"status": "ok", "received": data}
+
+
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
@@ -30,53 +37,90 @@ class RefreshTokenRequest(BaseModel):
 
 @router.post("/signup", response_model=TokenResponse)
 def signup(payload: UserSignUp, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == payload.email).first()
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email is already registered",
+    try:
+        print(f"[Signup] Received email: {payload.email}")
+        existing = db.query(User).filter(User.email == payload.email).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email is already registered",
+            )
+
+        password_hash = security_service.hash_password(payload.password)
+        print(f"[Signup] Password hashed successfully")
+
+        user = User(
+            email=payload.email,
+            password_hash=password_hash,
+            full_name=payload.full_name,
+            phone=payload.phone,
+            is_active=True,
         )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        print(f"[Signup] User created with ID: {user.id}")
 
-    password_hash = security_service.hash_password(payload.password)
+        access_token = security_service.create_access_token({"sub": str(user.id)})
+        refresh_token = security_service.create_refresh_token({"sub": str(user.id)})
+        print(f"[Signup] Tokens created successfully")
 
-    user = User(
-        email=payload.email,
-        password_hash=password_hash,
-        full_name=payload.full_name,
-        phone=payload.phone,
-        is_active=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    access_token = security_service.create_access_token({"sub": str(user.id)})
-    refresh_token = security_service.create_refresh_token({"sub": str(user.id)})
-
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    )
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[Signup] ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Signup failed: {str(e)}"
+        )
 
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: UserLogin, db: Session = Depends(get_db)):
-    user: Optional[User] = db.query(User).filter(User.email == payload.email).first()
-    if not user or not user.password_hash:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
+    try:
+        print(f"[Login] Attempting login for email: {payload.email}")
+        user: Optional[User] = db.query(User).filter(User.email == payload.email).first()
+        if not user or not user.password_hash:
+            print(f"[Login] User not found or no password hash")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
 
-    if not security_service.verify_password(payload.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
+        if not security_service.verify_password(payload.password, user.password_hash):
+            print(f"[Login] Password verification failed")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
 
-    access_token = security_service.create_access_token({"sub": str(user.id)})
-    refresh_token = security_service.create_refresh_token({"sub": str(user.id)})
+        print(f"[Login] Password verified successfully")
+        access_token = security_service.create_access_token({"sub": str(user.id)})
+        refresh_token = security_service.create_refresh_token({"sub": str(user.id)})
+        print(f"[Login] Tokens created successfully")
+
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[Login] ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Login failed: {str(e)}"
+        )
 
     return TokenResponse(
         access_token=access_token,

@@ -3,17 +3,80 @@ document.addEventListener('DOMContentLoaded', () => {
   const uploadBtn = document.getElementById("uploadBtn");
   const fileInput = document.getElementById("resumeUpload");
   const dashboardBtn = document.getElementById("dashboardBtn");
+  const applyBtn = document.getElementById("applyBtn");
   const resultDiv = document.getElementById("result");
   const uploadStatus = document.getElementById("uploadStatus");
+  const userIdInput = document.getElementById("userIdInput");
+  const saveUserBtn = document.getElementById("saveUserBtn");
+  const userStatus = document.getElementById("userStatus");
+  const apiBaseInput = document.getElementById("apiBaseInput");
+  const saveApiBtn = document.getElementById("saveApiBtn");
+  const apiStatus = document.getElementById("apiStatus");
+
+  // Store current job data for apply flow
+  let currentJobData = null;
 
   // New element for showing the mini-score card
   const analysisResultCard = document.getElementById("analysisResult");
 
-  const API_BASE = "http://localhost:8000";
+  const DEFAULT_API_BASE = "http://localhost:8000/api/v1";
+
+  const normalizeApiBase = (value) => {
+    const normalized = (value || "").trim().replace(/\/$/, "");
+    return normalized || DEFAULT_API_BASE;
+  };
+
+  const getApiBase = async () => {
+    const data = await chrome.storage.local.get(["apiBase"]);
+    return normalizeApiBase(data.apiBase);
+  };
+
+  const saveApiBase = async () => {
+    const value = normalizeApiBase(apiBaseInput.value);
+    await chrome.storage.local.set({ apiBase: value });
+    apiBaseInput.value = value;
+    apiStatus.innerText = `API base set to ${value}`;
+    apiStatus.style.color = "#1e8e3e";
+  };
+
+  const getActiveUserId = async () => {
+    const data = await chrome.storage.local.get(["activeUserId"]);
+    const value = Number(data.activeUserId);
+    return Number.isInteger(value) && value > 0 ? value : 1;
+  };
+
+  const saveActiveUserId = async () => {
+    const value = Number(userIdInput.value);
+    if (!Number.isInteger(value) || value <= 0) {
+      userStatus.innerText = "Please enter a valid positive User ID.";
+      userStatus.style.color = "#d93025";
+      return;
+    }
+
+    await chrome.storage.local.set({ activeUserId: value });
+    userStatus.innerText = `Active User ID set to ${value}`;
+    userStatus.style.color = "#1e8e3e";
+  };
+
+  const initializeUserId = async () => {
+    const userId = await getActiveUserId();
+    userIdInput.value = String(userId);
+    userStatus.innerText = `Using User ID ${userId}`;
+    userStatus.style.color = "#555";
+  };
+
+  const initializeApiBase = async () => {
+    const apiBase = await getApiBase();
+    apiBaseInput.value = apiBase;
+    apiStatus.innerText = `Using API base ${apiBase}`;
+    apiStatus.style.color = "#555";
+  };
 
   // --- 1. ANALYSIS & SAVE LOGIC ---
   const performAnalysis = async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const activeUserId = await getActiveUserId();
+    const apiBase = await getApiBase();
 
     // Validate LinkedIn URL
     if (!tab.url || !tab.url.includes("linkedin.com/jobs")) {
@@ -34,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         // A. Verify user has a resume uploaded
-        const userRes = await fetch(`${API_BASE}/auth/user/1`);
+        const userRes = await fetch(`${apiBase}/auth/user/${activeUserId}`);
         if (!userRes.ok) {
           resultDiv.innerText = "❌ Backend error. Is the API running?";
           resultDiv.style.color = "red";
@@ -51,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultDiv.innerText = "⚙️ Processing AI Match...";
 
         // B. Save the Scraped Job to PostgreSQL
-        const saveRes = await fetch(`${API_BASE}/jobs/save-job`, {
+        const saveRes = await fetch(`${apiBase}/jobs/save-job`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -71,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // C. Trigger AI Analysis
-        const aiRes = await fetch(`${API_BASE}/jobs/analyze-resume`, {
+        const aiRes = await fetch(`${apiBase}/jobs/analyze-resume`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -93,17 +156,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result && result.score !== undefined) {
           resultDiv.innerText = "✅ Analysis Complete!";
           
-          // D. Show the Mini-Score Card
-          analysisResultCard.style.display = "block";
-          analysisResultCard.innerHTML = `
-            <div style="text-align:center;">
-              <span style="font-size: 24px; font-weight: bold; color: #0073b1;">${result.score}%</span>
-              <div style="font-size: 12px; font-weight: 600; color: #555;">ATS MATCH SCORE</div>
-            </div>
-            <div style="margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px;">
-              <small><strong>Insights:</strong> ${result.feedback || "Check the dashboard for details."}</small>
-            </div>
-          `;
+          // D. Show the Beautiful Score Card
+          analysisResultCard.classList.add('show');
+          
+          const score = Math.round(result.score);
+          const matchedCount = result.matched_skills ? result.matched_skills.length : 0;
+          const gapCount = result.missing_skills ? result.missing_skills.length : 0;
+          
+          // Update score display
+          document.getElementById('scoreValue').innerText = score + '%';
+          document.getElementById('scoreFill').style.width = score + '%';
+          document.getElementById('matchedCount').innerText = matchedCount;
+          document.getElementById('gapCount').innerText = gapCount;
+          
+          // Add feedback
+          const feedbackElement = document.createElement('div');
+          feedbackElement.style.marginTop = '12px';
+          feedbackElement.style.padding = '10px 8px';
+          feedbackElement.style.background = '#F5F5F5';
+          feedbackElement.style.borderRadius = '6px';
+          feedbackElement.style.fontSize = '12px';
+          feedbackElement.style.lineHeight = '1.5';
+          feedbackElement.style.color = '#4B5563';
+          feedbackElement.innerHTML = `<strong>Feedback:</strong> ${result.feedback || 'View dashboard for full analysis.'}`;
+          
+          if (!analysisResultCard.querySelector('[style*="marginTop: 12px"]')) {
+            analysisResultCard.appendChild(feedbackElement);
+          }
+          
+          // Store job data and show apply button
+          currentJobData = response;
+          applyBtn.style.display = 'block';
         }
       } catch (error) {
         console.error("Popup Error:", error);
@@ -127,7 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append("file", file);
 
       try {
-        const res = await fetch(`${API_BASE}/auth/user/1/resume`, {
+        const activeUserId = await getActiveUserId();
+        const apiBase = await getApiBase();
+        const res = await fetch(`${apiBase}/auth/user/${activeUserId}/resume`, {
           method: "POST",
           body: formData
         });
@@ -145,13 +230,78 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // --- 3. DASHBOARD NAVIGATION ---
+  // --- 3. APPLY TO JOB LOGIC ---
+  if (applyBtn) {
+    applyBtn.onclick = async () => {
+      if (!currentJobData) {
+        alert("No job data available. Please analyze a job first.");
+        return;
+      }
+
+      applyBtn.disabled = true;
+      applyBtn.innerText = "⏳ Applying...";
+
+      try {
+        const activeUserId = await getActiveUserId();
+        const apiBase = await getApiBase();
+        const token = await chrome.storage.local.get(["authToken"]);
+
+        const applyRes = await fetch(`${apiBase}/jobs/save-and-apply`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token.authToken || ""}`
+          },
+          body: JSON.stringify({
+            title: currentJobData.title,
+            company: currentJobData.company,
+            location: currentJobData.location,
+            description: currentJobData.description,
+            contact_email: currentJobData.contact_email,
+            is_scraped: true
+          })
+        });
+
+        if (applyRes.ok) {
+          const result = await applyRes.json();
+          resultDiv.innerText = `✅ Applied to ${result.company}! Match: ${result.match_score}%`;
+          resultDiv.style.color = "#10B981";
+          applyBtn.innerText = "✅ Applied!";
+          applyBtn.style.opacity = "0.6";
+          applyBtn.disabled = true;
+        } else {
+          const error = await applyRes.json();
+          resultDiv.innerText = `❌ Error: ${error.detail || 'Could not apply'}`;
+          resultDiv.style.color = "#EF4444";
+          applyBtn.disabled = false;
+          applyBtn.innerText = "✅ Apply to This Job";
+        }
+      } catch (err) {
+        resultDiv.innerText = "❌ Connection error. Is the API running?";
+        resultDiv.style.color = "#EF4444";
+        applyBtn.disabled = false;
+        applyBtn.innerText = "✅ Apply to This Job";
+      }
+    };
+  }
+
+  // --- 4. DASHBOARD NAVIGATION ---
   if (dashboardBtn) {
     dashboardBtn.onclick = () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
     };
   }
 
+  if (saveUserBtn) {
+    saveUserBtn.onclick = saveActiveUserId;
+  }
+
+  if (saveApiBtn) {
+    saveApiBtn.onclick = saveApiBase;
+  }
+
   // Assign the main action
   if (analyzeBtn) analyzeBtn.onclick = performAnalysis;
+  initializeUserId();
+  initializeApiBase();
 });

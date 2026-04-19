@@ -2,6 +2,7 @@
 Application configuration settings
 """
 from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 from functools import lru_cache
 import os
 from dotenv import load_dotenv
@@ -10,6 +11,12 @@ load_dotenv()
 
 class Settings(BaseSettings):
     """Application settings from environment variables"""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",
+    )
     
     # App Settings
     APP_NAME: str = "ExtractResume AI"
@@ -51,10 +58,6 @@ class Settings(BaseSettings):
     # CORS Settings
     CORS_ORIGINS: list = ["*"]  # Change to specific origins in production
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-
 @lru_cache()
 def get_settings():
     """Get settings instance (cached)"""

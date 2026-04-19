@@ -6,11 +6,11 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password hashing - use argon2 for better Docker compatibility
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 # JWT bearer scheme
 security = HTTPBearer()
@@ -79,7 +79,7 @@ class SecurityService:
             )
     
     @staticmethod
-    def get_user_from_token(credentials: HTTPAuthCredentials = Depends(security)):
+    def get_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         """Extract user from JWT token (dependency)"""
         token = credentials.credentials
         payload = SecurityService.verify_token(token)

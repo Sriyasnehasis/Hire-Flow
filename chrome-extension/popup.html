@@ -2,91 +2,326 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    :root {
-      --linkedin-blue: #0073b1;
-      --success-green: #28a745;
-      --dashboard-purple: #6f42c1;
-      --text-dark: #333;
-    }
-
-    body { 
-      width: 320px; 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      padding: 20px; 
+    * {
       margin: 0;
-      color: var(--text-dark);
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    h3 { 
-      margin-top: 0; 
-      color: var(--linkedin-blue); 
+    :root {
+      --primary-blue: #2563EB;
+      --success-green: #10B981;
+      --warning-orange: #F59E0B;
+      --danger-red: #EF4444;
+      --gray-100: #F5F5F5;
+      --gray-200: #E5E5E5;
+      --gray-600: #4B5563;
+      --gray-800: #1F2937;
+      --purple-accent: #A855F7;
+    }
+
+    body {
+      width: 420px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #F5F7FA 0%, #F0F4F8 100%);
+      color: var(--gray-800);
+      padding: 0;
+      margin: 0;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #1E40AF 100%);
+      border-radius: 12px;
+      padding: 16px;
+      color: white;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+    }
+
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    .match-score-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: none;
+    }
+
+    .match-score-card.show {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .score-content {
       text-align: center;
-      border-bottom: 2px solid #f3f2ef;
-      padding-bottom: 10px;
     }
 
-    button { 
-      width: 100%; 
-      padding: 12px; 
-      margin-bottom: 10px; 
-      cursor: pointer; 
-      border-radius: 6px; 
-      border: none; 
-      font-weight: bold; 
+    .score-value {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--primary-blue);
+      margin: 8px 0;
+    }
+
+    .score-label {
+      font-size: 11px;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .score-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--gray-200);
+      border-radius: 3px;
+      margin: 12px 0 8px 0;
+      overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success-green) 0%, var(--primary-blue) 100%);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .score-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .status-item {
+      text-align: center;
+      flex: 1;
+    }
+
+    .status-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-800);
+    }
+
+    .status-label {
+      font-size: 11px;
+      color: var(--gray-600);
+      margin-top: 2px;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .button-group.full {
+      grid-template-columns: 1fr;
+    }
+
+    button {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    #analyzeBtn {
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #1E40AF 100%);
+      color: white;
+      grid-column: span 2;
       font-size: 14px;
-      transition: opacity 0.2s;
+      font-weight: 700;
     }
 
-    button:hover { opacity: 0.9; }
+    #analyzeBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
-    #analyzeBtn { background: var(--linkedin-blue); color: white; }
-    #uploadBtn { background: var(--success-green); color: white; }
-    #dashboardBtn { background: var(--dashboard-purple); color: white; }
+    #uploadBtn {
+      background: linear-gradient(135deg, var(--success-green) 0%, #059669 100%);
+      color: white;
+    }
 
-    .status { 
-      font-size: 13px; 
-      text-align: center; 
-      margin-top: 8px; 
+    #dashboardBtn {
+      background: linear-gradient(135deg, var(--purple-accent) 0%, #7E22CE 100%);
+      color: white;
+    }
+
+    .status {
+      font-size: 12px;
+      text-align: center;
+      margin-top: 8px;
       min-height: 20px;
-      line-height: 1.4;
+      line-height: 1.5;
+      padding: 8px;
+      border-radius: 6px;
+      background: var(--gray-100);
     }
 
     .divider {
       height: 1px;
-      background: #e0e0e0;
-      margin: 15px 0;
+      background: var(--gray-200);
+      margin: 12px 0;
     }
 
-    /* Small result card inside popup */
-    #analysisResult {
-      background: #f9f9f9;
-      border-radius: 8px;
-      padding: 10px;
-      display: none; /* Shown via popup.js after analysis */
+    .settings-row {
+      display: flex;
+      gap: 8px;
       margin-bottom: 10px;
-      border: 1px solid #ddd;
+    }
+
+    .settings-row input {
+      flex: 1;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--gray-200);
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    .settings-row button {
+      width: auto;
+      padding: 9px 12px;
+      background: var(--gray-600);
+      color: white;
+      margin: 0;
+    }
+
+    #resumeUpload {
+      display: none;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 16px 0 10px 0;
     }
   </style>
 </head>
 <body>
-  <h3>ExtractResume AI</h3>
-  
-  <button id="analyzeBtn">🔍 Analyze This Job</button>
-  <div id="result" class="status">Ready to scan LinkedIn...</div>
-
-  <div id="analysisResult">
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>⚡ ExtractResume AI</h1>
+      <p>AI-powered LinkedIn job analyzer</p>
     </div>
 
-  <div class="divider"></div>
+    <!-- Match Score Card -->
+    <div id="analysisResult" class="match-score-card">
+      <div class="score-content">
+        <div class="score-label">Job Match Score</div>
+        <div class="score-value" id="scoreValue">--</div>
+        <div class="score-bar">
+          <div class="score-fill" id="scoreFill" style="width: 0%"></div>
+        </div>
+        <div class="score-status">
+          <div class="status-item">
+            <div class="status-value" id="matchedCount">0</div>
+            <div class="status-label">Matched</div>
+          </div>
+          <div class="status-item">
+            <div class="status-value" id="gapCount">0</div>
+            <div class="status-label">To Learn</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <input type="file" id="resumeUpload" style="display:none" accept=".pdf,.docx,.txt" />
-  <button id="uploadBtn">📄 Update Resume</button>
-  <div id="uploadStatus" class="status"></div>
+    <!-- Main Actions -->
+    <div class="button-group full">
+      <button id="analyzeBtn">🔍 Analyze This Job</button>
+    </div>
+    <div id="result" class="status">Ready to scan LinkedIn jobs...</div>
 
-  <div class="divider"></div>
+    <div class="divider"></div>
 
-  <button id="dashboardBtn">📊 View Full Skill Gaps</button>
+    <!-- Quick Actions -->
+    <div class="button-group">
+      <button id="uploadBtn">📄 Update Resume</button>
+      <button id="dashboardBtn">📊 Full Analysis</button>
+    </div>
+
+    <div id="uploadStatus" class="status"></div>
+
+    <!-- Apply Button (shown after analysis) -->
+    <button id="applyBtn" style="display: none; grid-column: span 2; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; margin-top: 8px;">
+      ✅ Apply to This Job
+    </button>
+
+    <div class="divider"></div>
+
+    <!-- Settings Section -->
+    <div class="section-title">Settings</div>
+
+    <div class="settings-row">
+      <input id="userIdInput" type="number" min="1" placeholder="User ID" />
+      <button id="saveUserBtn">Save</button>
+    </div>
+    <div id="userStatus" class="status"></div>
+
+    <div class="settings-row">
+      <input id="apiBaseInput" type="text" placeholder="API URL (localhost:8000)" />
+      <button id="saveApiBtn">Save</button>
+    </div>
+    <div id="apiStatus" class="status"></div>
+  </div>
 
   <script src="popup.js"></script>
 </body>

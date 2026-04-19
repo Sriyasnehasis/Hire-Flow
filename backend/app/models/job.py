@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from app.core.db import Base
 import datetime
 
@@ -18,6 +19,9 @@ class JobListing(Base):
     job_url = Column(Text, nullable=True)            # Helpful for "View Original" buttons
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # Relationships
+    applications = relationship("JobApplication", back_populates="job_listing", cascade="all, delete-orphan")
 
     def to_dict(self):
         """Helper to convert SQL object to JSON easily"""

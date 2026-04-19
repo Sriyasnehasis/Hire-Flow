@@ -1,0 +1,19 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon-only version (for favicon) -->
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="#2563EB" stroke-width="2.5"/>
+  
+  <!-- Main flow path -->
+  <path d="M 100 145 Q 135 132 148 95 Q 152 72 130 50 Q 100 30 75 40" 
+        fill="none" stroke="#2563EB" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Arrow head -->
+  <path d="M 75 40 L 65 55 L 78 48 Z" fill="#2563EB"/>
+  
+  <!-- Inner accent -->
+  <path d="M 100 138 Q 128 127 138 95 Q 141 78 125 60 Q 105 48 85 55" 
+        fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  
+  <!-- Starting point -->
+  <circle cx="100" cy="145" r="3.5" fill="#2563EB"/>
+</svg>

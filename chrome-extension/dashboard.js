@@ -8,21 +8,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyBtn = document.getElementById('applyBtn');
     const domainSelect = document.getElementById('domainSelect');
     const status = document.getElementById('status');
+    const DEFAULT_API_BASE = "http://localhost:8000/api/v1";
+
+    function normalizeApiBase(value) {
+        const normalized = (value || "").trim().replace(/\/$/, "");
+        return normalized || DEFAULT_API_BASE;
+    }
+
+    async function getApiBase() {
+        const data = await chrome.storage.local.get(["apiBase"]);
+        return normalizeApiBase(data.apiBase);
+    }
+
+    async function getActiveUserId() {
+        const data = await chrome.storage.local.get(["activeUserId"]);
+        const value = Number(data.activeUserId);
+        return Number.isInteger(value) && value > 0 ? value : 1;
+    }
 
     async function initDashboard() {
-        const userId = 1; // Default User ID for local development
-        const API_BASE = "http://localhost:8000";
+        const userId = await getActiveUserId();
+        const apiBase = await getApiBase();
         
         try {
             // STEP 1: Fetch User Info (for the greeting)
-            const userRes = await fetch(`${API_BASE}/auth/user/${userId}`);
+            const userRes = await fetch(`${apiBase}/auth/user/${userId}`);
             if (!userRes.ok) throw new Error(`User fetch failed: ${userRes.status}`);
             const userData = await userRes.json();
             if (userData.username) userNameSpan.innerText = userData.username;
 
             // STEP 2: Fetch Detailed Skill & Gap Analysis
             // This pulls from the new /jobs/user-analysis/ endpoint we created
-            const analysisRes = await fetch(`${API_BASE}/jobs/user-analysis/${userId}`);
+            const analysisRes = await fetch(`${apiBase}/jobs/user-analysis/${userId}`);
             if (!analysisRes.ok) {
                 const errText = await analysisRes.text();
                 throw new Error(`Analysis failed (${analysisRes.status}): ${errText.substring(0, 100)}`);
@@ -74,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 : "<strong>Profile perfectly matches this JD! 🚀</strong>";
 
             // STEP 5: Fetch Job Recommendations List
-            const recRes = await fetch(`${API_BASE}/jobs/recommendations/${userId}`);
+            const recRes = await fetch(`${apiBase}/jobs/recommendations/${userId}`);
             if (!recRes.ok) {
                 const errText = await recRes.text();
                 throw new Error(`Recommendations failed (${recRes.status}): ${errText.substring(0, 100)}`);
@@ -122,9 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (applyBtn) {
         applyBtn.onclick = async () => {
             const domain = domainSelect.value;
+            const userId = await getActiveUserId();
+            const apiBase = await getApiBase();
             status.innerText = `Searching for ${domain} vacancies...`;
             try {
-                const res = await fetch(`http://localhost:8000/jobs/bulk-apply?user_id=1&domain=${domain}`, { method: 'POST' });
+                const res = await fetch(`${apiBase}/jobs/bulk-apply?user_id=${userId}&domain=${encodeURIComponent(domain)}`, { method: 'POST' });
                 const result = await res.json();
                 status.innerText = "✅ " + (result.message || "Bulk apply simulation complete!");
                 status.style.color = "green";
