@@ -5,11 +5,12 @@ import { useAuth } from "@/hooks/useAuth";
 import SkillGapAnalysis from "@/components/SkillGap/SkillGapAnalysis";
 
 interface Job {
-  id: number;
+  job_id: number;
   title: string;
   company: string;
   location: string;
   description: string;
+  score?: number;
 }
 
 export default function SkillGapPage() {
@@ -28,9 +29,12 @@ export default function SkillGapPage() {
 
     const fetchJobs = async () => {
       try {
-        const apiUrl =
+        const rawApiUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const response = await fetch(`${apiUrl}/api/v1/jobs/recommendations`, {
+        const apiBase = rawApiUrl.endsWith("/api/v1")
+          ? rawApiUrl
+          : `${rawApiUrl}/api/v1`;
+        const response = await fetch(`${apiBase}/jobs/recommendations`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -62,14 +66,14 @@ export default function SkillGapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-white mb-2">
             Skill Gap Analysis
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-400">
             Identify the skills you need to improve your chances for each job
           </p>
         </div>
@@ -77,42 +81,47 @@ export default function SkillGapPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Job List Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="bg-blue-600 text-white p-4">
+            <div className="bg-white/5 border border-white/10 rounded-lg shadow-md overflow-hidden">
+              <div className="bg-indigo-600/40 text-white p-4 border-b border-white/10">
                 <h2 className="text-lg font-semibold">
                   Recommended Jobs ({jobs.length})
                 </h2>
               </div>
 
               {loading ? (
-                <div className="p-4 text-center text-gray-500">
+                <div className="p-4 text-center text-slate-400">
                   Loading jobs...
                 </div>
               ) : jobs.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
+                <div className="p-4 text-center text-slate-400">
                   No jobs found. Use the chrome extension to scrape jobs first.
                 </div>
               ) : (
-                <div className="divide-y max-h-96 overflow-y-auto">
+                <div className="divide-y divide-white/10 max-h-96 overflow-y-auto">
                   {jobs.map((job) => (
                     <button
-                      key={job.id}
-                      onClick={() => setSelectedJobId(job.id)}
-                      className={`w-full text-left p-4 hover:bg-blue-50 transition-colors ${
-                        selectedJobId === job.id
-                          ? "bg-blue-100 border-l-4 border-blue-600"
+                      key={job.job_id}
+                      onClick={() => setSelectedJobId(job.job_id)}
+                      className={`w-full text-left p-4 hover:bg-indigo-500/10 transition-colors ${
+                        selectedJobId === job.job_id
+                          ? "bg-indigo-500/20 border-l-4 border-indigo-500"
                           : ""
                       }`}
                     >
-                      <h3 className="font-semibold text-gray-900 truncate">
+                      <h3 className="font-semibold text-white truncate">
                         {job.title}
                       </h3>
-                      <p className="text-sm text-gray-600 truncate">
+                      <p className="text-sm text-slate-400 truncate">
                         {job.company}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1">
                         📍 {job.location}
                       </p>
+                      {typeof job.score === "number" && (
+                        <p className="text-xs text-indigo-300 mt-1">
+                          Match: {job.score}%
+                        </p>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -122,11 +131,11 @@ export default function SkillGapPage() {
 
           {/* Skill Gap Analysis */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white/5 border border-white/10 rounded-lg shadow-md p-6">
               {selectedJobId ? (
                 <SkillGapAnalysis jobId={selectedJobId} />
               ) : (
-                <div className="text-center text-gray-500">
+                <div className="text-center text-slate-400">
                   Select a job to see the skill gap analysis
                 </div>
               )}
@@ -135,13 +144,14 @@ export default function SkillGapPage() {
         </div>
 
         {/* Quick Tips */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">
+        <div className="mt-8 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-indigo-200 mb-4">
             💡 Quick Tips
           </h3>
-          <ul className="space-y-2 text-blue-800">
+          <ul className="space-y-2 text-slate-300">
             <li>
-              &#10003; Focus on learning the &apos;Priority Skills&apos; to improve your match
+              &#10003; Focus on learning the &apos;Priority Skills&apos; to
+              improve your match
             </li>
             <li>✓ Use the provided learning resources to bridge skill gaps</li>
             <li>✓ Update your resume after learning new skills</li>

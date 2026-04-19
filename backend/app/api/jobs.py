@@ -50,6 +50,12 @@ class JobCreate(BaseModel):
     contact_email: Optional[str] = None
     is_scraped: bool = True  # Default to True for Extension data
 
+
+class LiveSyncRequest(BaseModel):
+    keyword: str = "Software Developer"
+    location: str = "India"
+    max_results: int = 30
+
 # --- ENDPOINTS ---
 
 @router.post("/analyze-resume")
@@ -86,12 +92,78 @@ async def save_job(job_data: JobCreate, db: Session = Depends(get_db)):
         location=job_data.location or "Remote",
         contact_email=job_data.contact_email,
         is_scraped=True,
+        source="extension",
         created_at=datetime.datetime.utcnow()
     )
     db.add(new_job)
     db.commit()
     db.refresh(new_job)
     return {"status": "success", "job_id": new_job.id}
+
+
+@router.post("/sync-live")
+async def sync_live_jobs_to_db(
+    request: LiveSyncRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Pull live jobs from Adzuna and store them in PostgreSQL for matching.
+    This powers profile-based recommendations without any demo dataset.
+    """
+    if request.max_results < 1 or request.max_results > 100:
+        raise HTTPException(status_code=400, detail="max_results must be between 1 and 100")
+
+    data = await fetch_india_jobs(keyword=request.keyword, location=request.location)
+    jobs = data.get("results", [])[: request.max_results]
+
+    created = 0
+    skipped = 0
+
+    for item in jobs:
+        title = (item.get("title") or "").strip()
+        company = (item.get("company") or {}).get("display_name") if isinstance(item.get("company"), dict) else item.get("company")
+        company = (company or "Unknown Company").strip()
+        location = (item.get("location") or {}).get("display_name") if isinstance(item.get("location"), dict) else item.get("location")
+        location = (location or "India").strip()
+
+        if not title:
+            skipped += 1
+            continue
+
+        exists = db.query(JobListing).filter(
+            JobListing.title == title,
+            JobListing.company == company,
+            JobListing.location == location,
+        ).first()
+        if exists:
+            skipped += 1
+            continue
+
+        db.add(
+            JobListing(
+                title=title,
+                company=company,
+                location=location,
+                description=item.get("description") or "",
+                contact_email=None,
+                is_scraped=True,
+                source="adzuna",
+                job_url=item.get("redirect_url") or item.get("url"),
+                created_at=datetime.datetime.utcnow(),
+            )
+        )
+        created += 1
+
+    db.commit()
+
+    return {
+        "status": "success",
+        "query": request.keyword,
+        "location": request.location,
+        "fetched": len(jobs),
+        "created": created,
+        "skipped": skipped,
+    }
 
 
 @router.post("/save-and-apply")

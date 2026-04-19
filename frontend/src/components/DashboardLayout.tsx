@@ -19,7 +19,7 @@ import {
   ChevronRight,
   TrendingUp,
   Files,
-  Shield
+  Shield,
 } from "lucide-react";
 
 interface NavItem {
@@ -45,9 +45,7 @@ const navSections: NavSection[] = [
   },
   {
     title: "Optimization",
-    items: [
-      { href: "/skills", label: "Career Map", icon: TrendingUp },
-    ],
+    items: [{ href: "/skills", label: "Career Map", icon: TrendingUp }],
   },
   {
     title: "Networking",
@@ -68,7 +66,19 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const userName = "Sriya";
+  const [userName, setUserName] = useState("User");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const name = parsed?.full_name || parsed?.name || parsed?.email;
+      if (name) setUserName(String(name));
+    } catch {
+      // Keep default fallback.
+    }
+  }, []);
 
   const isActive = (href: string) => pathname === href;
 
@@ -77,7 +87,11 @@ export default function DashboardLayout({
       {/* Brand Header */}
       <div className="p-6 border-b border-white/5 flex items-center gap-3">
         <Link href="/" className="flex items-center gap-3">
-          <img src="/hireflow-logo.png" alt="HireFlow" className="w-9 h-9 rounded-lg" />
+          <img
+            src="/hireflow-logo.png"
+            alt="HireFlow"
+            className="w-9 h-9 rounded-lg"
+          />
           <span className="text-xl font-bold tracking-tight text-white">
             Hire<span className="text-gradient">Flow</span>
           </span>
@@ -107,13 +121,21 @@ export default function DashboardLayout({
                   >
                     <ActiveIcon
                       size={20}
-                      className={active ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"}
+                      className={
+                        active
+                          ? "text-indigo-400"
+                          : "text-slate-500 group-hover:text-slate-300"
+                      }
                     />
                     <span className="flex-1">{item.label}</span>
                     {item.badge && (
-                      <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
-                        item.badge === "LIVE" ? "bg-red-500/20 text-red-400" : "bg-indigo-500/20 text-indigo-400"
-                      }`}>
+                      <span
+                        className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                          item.badge === "LIVE"
+                            ? "bg-red-500/20 text-red-400"
+                            : "bg-indigo-500/20 text-indigo-400"
+                        }`}
+                      >
                         {item.badge}
                       </span>
                     )}
@@ -139,7 +161,11 @@ export default function DashboardLayout({
           </div>
         </div>
         <button
-          onClick={() => { localStorage.removeItem("token"); router.push("/auth/login"); }}
+          onClick={() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            router.push("/auth/login");
+          }}
           className="w-full mt-3 flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors rounded-xl"
         >
           <LogOut size={16} />
@@ -158,8 +184,14 @@ export default function DashboardLayout({
 
       {/* Mobile Sidebar */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)}>
-          <aside className="w-72 h-full glass-sidebar shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div
+          className="lg:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        >
+          <aside
+            className="w-72 h-full glass-sidebar shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <SidebarContent />
           </aside>
         </div>
@@ -169,26 +201,34 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col h-full relative overflow-hidden">
         {/* Mobile Header */}
         <header className="h-16 flex items-center justify-between px-6 glass-nav lg:hidden flex-shrink-0">
-          <button onClick={() => setMobileOpen(true)} className="p-2 -ml-2 text-slate-400">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-2 -ml-2 text-slate-400"
+          >
             <Menu size={24} />
           </button>
-          <span className="text-lg font-bold text-white">Hire<span className="text-gradient">Flow</span></span>
+          <span className="text-lg font-bold text-white">
+            Hire<span className="text-gradient">Flow</span>
+          </span>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center">
-            <span className="text-xs font-bold text-white">{userName.charAt(0)}</span>
+            <span className="text-xs font-bold text-white">
+              {userName.charAt(0)}
+            </span>
           </div>
         </header>
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container-wide py-8 md:py-12">
-            {children}
-          </div>
+          <div className="container-wide py-8 md:py-12">{children}</div>
         </main>
       </div>
 
       {/* Background Orbs */}
       <div className="orb orb-blue w-[400px] h-[400px] fixed top-[-100px] right-[-100px] animate-pulse-glow pointer-events-none" />
-      <div className="orb orb-purple w-[300px] h-[300px] fixed bottom-[-100px] left-[30%] animate-pulse-glow pointer-events-none" style={{ animationDelay: '3s' }} />
+      <div
+        className="orb orb-purple w-[300px] h-[300px] fixed bottom-[-100px] left-[30%] animate-pulse-glow pointer-events-none"
+        style={{ animationDelay: "3s" }}
+      />
     </div>
   );
 }
