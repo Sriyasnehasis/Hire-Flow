@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.security import security_service
 from app.core.config import settings
-from app.models.user import User
+from app.models import User
 from app.schemas import UserSignUp, UserLogin, TokenResponse, UserResponse
 
 

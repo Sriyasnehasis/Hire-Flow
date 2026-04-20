@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.db import engine, Base
-from app.models.job import JobListing
-from app.models.user import User
+# Import all models from __init__.py to ensure they're registered with Base
+from app.models import User, ProfileData, Resume, JobListing, JobApplication, SavedJob, SkillGapAnalysis, InterviewSession, HRContact
 from app.api import jobs, auth, resume, applications, interviews, hr_contacts, users
 
 # This line automatically creates tables in PostgreSQL
