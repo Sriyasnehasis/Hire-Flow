@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.models.job import JobListing
-from app.models.user import User
+from app.models import JobListing, User
 from app.services.ai_service import get_ats_score
 from pydantic import BaseModel
 from typing import Optional, List
