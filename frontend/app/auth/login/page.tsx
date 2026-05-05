@@ -1,257 +1,120 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import {
-  Mail,
-  Lock,
-  Github,
-  ArrowRight,
-  Sparkles,
-  CheckCircle2,
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { SiteLogo } from "@/components/SiteLogo";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setToken, setUser } = useAuth();
-  const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const apiBase = rawApiUrl.endsWith("/api/v1")
-    ? rawApiUrl
-    : `${rawApiUrl}/api/v1`;
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+
+    const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const apiBase = rawApiUrl.endsWith("/api/v1") ? rawApiUrl : `${rawApiUrl}/api/v1`;
 
     try {
-      const response = await fetch(`${apiBase}/auth/login`, {
+      const res = await fetch(`${apiBase}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+        body: JSON.stringify({ email, password })
       });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          data.detail || "Unable to sign in. Please check your credentials.",
-        );
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("token", data.access_token);
+        
+        // Fetch user details to get the real name
+        const userRes = await fetch(`${apiBase}/users/me`, {
+          headers: { Authorization: `Bearer ${data.access_token}` }
+        });
+        
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          localStorage.setItem("user", JSON.stringify(userData));
+        }
+
+        router.push("/dashboard");
+      } else {
+        const errData = await res.json();
+        alert(errData.detail || "Login failed");
       }
-
-      const data = await response.json();
-      const token = data.access_token as string;
-      setToken(token);
-
-      const meResponse = await fetch(`${apiBase}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (meResponse.ok) {
-        const me = await meResponse.json();
-        setUser(me);
-      }
-
-      router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      console.error(err);
+      alert("Connectivity failure. Verify local backend status.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex relative overflow-hidden">
-      {/* Background Orbs */}
-      <div className="orb orb-blue w-[500px] h-[500px] top-[-150px] left-[-100px] animate-pulse-glow" />
-      <div
-        className="orb orb-purple w-[400px] h-[400px] bottom-[-100px] right-[-100px] animate-pulse-glow"
-        style={{ animationDelay: "2s" }}
-      />
+    <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden px-4 font-sans selection:bg-cyan-500/30">
+      <div className="mesh-bg absolute inset-0 opacity-40" />
 
-      {/* Left Brand Panel */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-between p-16 relative z-10">
-        <Link href="/" className="flex items-center gap-3">
-          <img
-            src="/hireflow-logo.png"
-            alt="HireFlow"
-            className="w-10 h-10 rounded-lg"
-          />
-          <span className="text-2xl font-bold text-white">
-            Hire<span className="text-gradient">Flow</span>
-          </span>
-        </Link>
-
-        <div>
-          <h2 className="text-5xl font-bold text-white leading-tight mb-8">
-            Your dream career <br />
-            starts with <span className="text-gradient italic">one</span> login.
-          </h2>
-          <div className="space-y-4">
-            {[
-              "AI-powered resume optimization",
-              "ATS shielding with 99% accuracy",
-              "Live mock interviews with voice feedback",
-            ].map((text, i) => (
-              <div key={i} className="flex items-center gap-3 text-slate-400">
-                <CheckCircle2 size={16} className="text-indigo-400" />
-                <span>{text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="glass-card-strong p-6">
-          <p className="text-slate-300 italic mb-3">
-            "HireFlow changed the game for me. 4 interviews in one week."
-          </p>
-          <p className="text-sm text-slate-500">— Alex R., Software Engineer</p>
-        </div>
+      {/* 🧬 Branding */}
+      <div className="absolute top-8 flex flex-col items-center z-20">
+        <SiteLogo className="w-12 h-12 animate-float" />
+        <span className="mt-3 text-[9px] font-black tracking-[0.6em] text-white/20 uppercase">Secure Node</span>
       </div>
 
-      {/* Right Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative z-10">
-        <div className="w-full max-w-md">
-          <div className="lg:hidden mb-10">
-            <Link href="/" className="flex items-center gap-3 mb-6">
-              <img
-                src="/hireflow-logo.png"
-                alt="HireFlow"
-                className="w-10 h-10 rounded-lg"
-              />
-              <span className="text-2xl font-bold text-white">
-                Hire<span className="text-gradient">Flow</span>
-              </span>
-            </Link>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-[380px] bg-black/40 backdrop-blur-3xl p-8 lg:p-10 rounded-[2.5rem] border border-white/5 relative z-10 shadow-2xl"
+      >
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-black uppercase tracking-tighter text-white mb-1">Access Space</h1>
+          <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.4em]">Initialize Neural Connection</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative group">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-cyan-400 transition-colors" size={16} />
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all font-bold"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome back</h1>
-          <p className="text-slate-400 mb-8">
-            Sign in to your intelligence dashboard.
-          </p>
+          <div className="relative group">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-cyan-400 transition-colors" size={16} />
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50 transition-all font-bold"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-medium">
-                {error}
-              </div>
-            )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-white text-black py-4 rounded-xl font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-cyan-400 hover:text-white hover:shadow-[0_15px_30px_rgba(0,229,255,0.3)] hover:scale-[1.02] transition-all group mt-6"
+          >
+            {loading ? "Syncing..." : "Connect Node"}
+            {!loading && <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />}
+          </button>
+        </form>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-                  size={18}
-                />
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="you@company.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-sm font-semibold text-slate-300">
-                  Password
-                </label>
-                <Link
-                  href="#"
-                  className="text-xs text-indigo-400 hover:underline"
-                >
-                  Forgot?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-                  size={18}
-                />
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-gradient !py-4 text-lg justify-center disabled:opacity-50"
-            >
-              {loading ? "Signing in..." : "Sign In"} <ArrowRight size={20} />
-            </button>
-
-            <div className="flex items-center gap-4 text-slate-600">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                Or
-              </span>
-              <div className="flex-1 h-px bg-white/10" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <a
-                href={`${apiBase}/auth/github/login`}
-                className="glass-card flex items-center justify-center gap-2 py-3 font-semibold text-slate-300 text-sm hover:text-white"
-              >
-                <Github size={18} /> GitHub
-              </a>
-              <button
-                type="button"
-                disabled
-                className="glass-card flex items-center justify-center gap-2 py-3 font-semibold text-slate-500 text-sm opacity-60 cursor-not-allowed"
-                title="Google OAuth coming soon"
-              >
-                Google
-              </button>
-            </div>
-
-            <button
-              type="button"
-              disabled
-              className="w-full glass-card py-3 font-semibold text-slate-500 text-sm opacity-60 cursor-not-allowed"
-              title="LinkedIn OAuth coming soon"
-            >
-              LinkedIn
-            </button>
-          </form>
-
-          <p className="mt-8 text-center text-slate-500">
-            Don't have an account?{" "}
-            <Link
-              href="/auth/signup"
-              className="text-indigo-400 font-bold hover:underline"
-            >
-              Start for free
-            </Link>
+        <div className="mt-8 text-center space-y-4">
+          <p className="text-[10px] font-bold text-white/30 tracking-tight">
+            New trajectory? <Link href="/auth/signup" className="text-white hover:text-cyan-400 font-black transition-colors">Start identity initialization</Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

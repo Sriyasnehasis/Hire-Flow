@@ -1,226 +1,113 @@
-# ExtractResume AI — Placement Assistant Platform
+# HireFlow — The Ultimate AI Career Ecosystem
 
-> An AI-powered job application & placement preparation platform built for BTech students.
-
----
-
-## What It Does
-
-ExtractResume AI helps engineering students automate their placement journey — from resume optimization to job applications and interview prep — all from one platform.
-
-**Planned Features:**
-- Resume ATS scoring & optimization
-- AI-powered mock interviews with feedback
-- Skill gap analysis with learning roadmaps
-- 1-click bulk job applications via Chrome extension
-- Automated cover letter generation
-- HR contact discovery & email outreach
-- Centralized application tracking dashboard
-- LinkedIn & GitHub profile integration
+HireFlow is a comprehensive, AI-powered platform designed to streamline the entire career journey for students and professionals. From crafting the perfect resume to acing the final interview, HireFlow provides the tools needed to succeed in the modern job market.
 
 ---
 
-## Current Stage
+## 🚀 Key Features
 
-> **Infrastructure complete. Feature implementation in progress.**
+### 📄 Intelligent Resume Suite
+- **AI Resume Builder**: Create professional resumes with dynamic templates.
+- **Real-time Editor**: Powerful WYSIWYG editor for resume customization.
+- **ATS Analysis**: Get detailed scores and feedback on how well your resume performs against Applicant Tracking Systems.
+- **Skill Gap Analysis**: Identify missing skills required for your target job roles.
 
-| Component | Status |
-|---|---|
-| Project architecture & database schema | ✅ Complete |
-| Backend API structure (FastAPI routes) | ✅ Complete (logic pending) |
-| Frontend scaffold (Next.js + Tailwind) | ✅ Complete (pages pending) |
-| Docker & DevOps setup | ✅ Complete |
-| Chrome extension scaffold | ✅ Complete |
-| User authentication (JWT) | 🔄 In progress |
-| Resume upload & ATS analysis | ⏳ Pending |
-| AI features (interviews, cover letters) | ⏳ Pending |
-| Job scraping & application automation | ⏳ Pending |
-| Email service & outreach automation | ⏳ Pending |
-| Frontend components & UI | ⏳ Pending |
+### 🤖 AI Interview Coach
+- **Voice & Text Interviews**: Practice with an AI that supports both text and voice interactions.
+- **Real-time Feedback**: Get instant analysis on your answers and areas for improvement.
+- **Role-Specific Sessions**: Tailor your interview practice to specific job titles.
 
----
+### 💼 Job Discovery & Management
+- **Live Job Search**: Integrated with Adzuna API for the latest job listings.
+- **Application Tracking**: A centralized dashboard to manage all your job applications.
+- **HR Contact Discovery**: Tools to find and manage recruiter contact information.
 
-## Architecture
+### 🛠️ Advanced Integrations
+- **GitHub Sync**: Automatically pull projects and skills from your GitHub profile.
+- **Chrome Extension**: (Beta) 1-click job applications and data extraction.
 
-```
-┌─────────────────────────────────┐
-│          Client Layer           │
-│  Next.js Web  │  Chrome Ext     │
-└───────┬────────────────┬────────┘
-        │                │
-        ▼                ▼
-┌────────────────────────────────┐
-│       FastAPI Backend          │
-│  /auth  /jobs  /resume         │
-│  /applications  /interviews    │
-│  /users  /hr-contacts          │
-└────────────────────────────────┘
-        │
-        ▼
-┌────────────────────────────────┐
-│           Data Layer           │
-│  PostgreSQL │ MongoDB │ Redis  │
-└────────────────────────────────┘
-        │
-        ▼
-┌────────────────────────────────┐
-│         External Services      │
-│  OpenAI · Adzuna · GitHub      │
-│  LinkedIn · SMTP / SendGrid    │
-└────────────────────────────────┘
-```
+### ✨ Premium Aesthetics
+- **Modern UI**: Built with a "Wow" factor using custom animations, kinetic text, and glassmorphism.
+- **Responsive Design**: Seamless experience across all devices.
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 14, TypeScript, Tailwind CSS, Zustand |
-| Backend | FastAPI, Python 3.11, SQLAlchemy, Pydantic |
-| Databases | PostgreSQL (relational) + MongoDB (documents) |
-| Cache | Redis |
-| Auth | JWT + Bcrypt |
-| DevOps | Docker, Docker Compose, Uvicorn |
-| AI | OpenAI GPT (interviews, cover letters) |
-| Job Data | Adzuna API |
-| Integrations | GitHub API, LinkedIn API |
+- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Framer Motion
+- **Backend**: FastAPI (Python 3.11), SQLAlchemy, Pydantic
+- **Databases**: PostgreSQL (Relational), MongoDB (Document-based)
+- **AI/ML**: OpenAI GPT-4, Custom ATS Scoring Algorithms
+- **Services**: Redis (Caching), JWT (Authentication), Adzuna (Job Data)
+- **DevOps**: Docker, Docker Compose, GitHub Actions
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 ExtractResume-Ecosystem/
-├── backend/
-│   └── app/
-│       ├── api/          # Route handlers (auth, jobs, resume, interviews…)
-│       ├── models/       # SQLAlchemy ORM models
-│       ├── schemas/      # Pydantic request/response schemas
-│       ├── services/     # Business logic (AI, ATS, email, scraping…)
-│       └── core/         # Config, DB connection, JWT security
-├── frontend/
-│   └── src/
-│       ├── app/          # Next.js 13+ app directory
-│       ├── components/   # UI components
-│       ├── hooks/        # Custom React hooks
-│       └── lib/          # API client & utilities
-├── chrome-extension/     # 1-click job apply extension
-├── docs/                 # Architecture, API spec, setup guides
-└── docker-compose.yml    # Full stack local environment
+├── backend/            # FastAPI Backend Service
+│   ├── app/            # Core Application Logic
+│   └── tests/          # Backend Test Suite
+├── frontend/           # Next.js Frontend Application
+│   ├── app/            # Next.js App Router
+│   ├── src/            # Components & Utilities
+│   └── public/         # Static Assets
+├── chrome-extension/   # Browser Extension for Job Automation
+├── docs/               # Project Documentation & Architecture
+│   ├── project-docs/   # Specifications & Roadmaps
+│   └── archive/        # Legacy Progress Reports
+├── scripts/            # Maintenance & Seeding Scripts
+│   ├── seed/           # Database Seeders
+│   └── debug/          # Diagnostic Tools
+└── docker-compose.yml  # Container Orchestration
 ```
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
-### Docker (Recommended)
+### Prerequisites
+- Docker & Docker Compose
+- Python 3.11+ (for local development)
+- Node.js 18+ (for local development)
 
-```bash
-git clone https://github.com/Sriyasnehasis/ExtractResume-Ecosystem.git
-cd ExtractResume-Ecosystem
-
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-
-docker-compose up -d
-```
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:3000 |
-| Backend API | http://localhost:8000 |
-| API Docs | http://localhost:8000/docs |
-
-### Local Development
-
-**Backend:**
-```bash
-cd backend
-bash setup.sh          # Linux/macOS
-# or: .\setup.ps1       # Windows PowerShell
-
-source venv/bin/activate
-cp .env.example .env
-uvicorn app.main:app --reload
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm install
-cp .env.example .env.local
-npm run dev
-```
+### Deployment with Docker (Recommended)
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Sriyasnehasis/ExtractResume-Ecosystem.git
+   cd ExtractResume-Ecosystem
+   ```
+2. **Setup Environment**:
+   ```bash
+   cp .env.example .env
+   cp backend/.env.example backend/.env
+   cp frontend/.env.example frontend/.env.local
+   ```
+3. **Spin up the stack**:
+   ```bash
+   docker-compose up -d
+   ```
+4. **Access the platform**:
+   - Frontend: `http://localhost:3000`
+   - Backend API: `http://localhost:8000`
+   - API Docs: `http://localhost:8000/docs`
 
 ---
 
-## API Endpoints
+## 🤝 Contributing
 
-```
-POST  /api/v1/auth/signup
-POST  /api/v1/auth/login
-GET   /api/v1/users/me
-POST  /api/v1/resumes/upload
-GET   /api/v1/jobs
-POST  /api/v1/applications/{job_id}/apply
-POST  /api/v1/interviews/start-session
-GET   /api/v1/hr-contacts
-```
-
-Full spec: [`docs/`](docs/) · Interactive: `http://localhost:8000/docs`
+We welcome contributions! Please check the `docs/` folder for more detailed information on our architecture and coding standards.
 
 ---
 
-## Roadmap
+## 👤 Developer
 
-**Phase 1 — MVP** *(Current)*
-- [x] Database schema & backend structure
-- [x] Frontend scaffold & Docker setup
-- [ ] User authentication
-- [ ] Resume upload & ATS scoring
-- [ ] Job listings & manual apply
-
-**Phase 2 — AI & Automation**
-- [ ] AI mock interviews & cover letter generation
-- [ ] Chrome extension for 1-click apply
-- [ ] Skill gap analysis & learning paths
-- [ ] Email outreach automation
-
-**Phase 3 — Advanced**
-- [ ] LinkedIn & GitHub integration
-- [ ] HR contact discovery
-- [ ] Analytics dashboard
+**Sriyasnehasis** — [GitHub](https://github.com/Sriyasnehasis)
 
 ---
 
-## Environment Variables
+## 📄 License
 
-**Backend** (`backend/.env`):
-```env
-POSTGRES_URL=postgresql://user:pass@localhost/extractresume
-MONGO_URL=mongodb://localhost:27017
-SECRET_KEY=your-secret-key
-OPENAI_API_KEY=sk-...
-ADZUNA_API_KEY=...
-GITHUB_TOKEN=ghp_...
-SMTP_SERVER=smtp.gmail.com
-SENDER_EMAIL=your-email@gmail.com
-```
-
-**Frontend** (`frontend/.env.local`):
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
----
-
-## Developer
-
-**Sriyasnehasis** · [GitHub](https://github.com/Sriyasnehasis/ExtractResume-Ecosystem)
-
----
-
-## License
-
-MIT
+This project is licensed under the MIT License.

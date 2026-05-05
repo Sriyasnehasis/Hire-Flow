@@ -37,6 +37,7 @@ class ProfileDataResponse(BaseModel):
     educational_qualification: Optional[str] = None
     years_of_experience: float
     current_company: Optional[str] = None
+    current_status: Optional[str] = None
     primary_skills: List[str] = Field(default_factory=list)
     preferred_roles: List[str] = Field(default_factory=list)
     research_interests: List[str] = Field(default_factory=list)
@@ -50,6 +51,7 @@ class ProfileDataUpdateRequest(BaseModel):
     educational_qualification: Optional[str] = None
     years_of_experience: Optional[float] = None
     current_company: Optional[str] = None
+    current_status: Optional[str] = None
     primary_skills: Optional[List[str]] = None
     preferred_roles: Optional[List[str]] = None
     research_interests: Optional[List[str]] = None
@@ -112,6 +114,7 @@ async def get_profile_data(
         educational_qualification=user.educational_qualification,
         years_of_experience=user.years_of_experience or 0.0,
         current_company=user.current_company,
+        current_status=user.current_status,
         primary_skills=user.primary_skills or [],
         preferred_roles=user.preferred_roles or [],
         research_interests=user.research_interests or [],
@@ -138,6 +141,8 @@ async def update_profile_data(
         user.years_of_experience = payload.years_of_experience
     if payload.current_company is not None:
         user.current_company = payload.current_company
+    if payload.current_status is not None:
+        user.current_status = payload.current_status
 
     cleaned_primary_skills = _clean_list(payload.primary_skills)
     if cleaned_primary_skills is not None:
@@ -163,6 +168,7 @@ async def update_profile_data(
         educational_qualification=user.educational_qualification,
         years_of_experience=user.years_of_experience or 0.0,
         current_company=user.current_company,
+        current_status=user.current_status,
         primary_skills=user.primary_skills or [],
         preferred_roles=user.preferred_roles or [],
         research_interests=user.research_interests or [],

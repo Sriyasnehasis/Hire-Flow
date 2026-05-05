@@ -3,6 +3,7 @@ import os
 import io
 import sys
 from typing import Optional
+from urllib.parse import urlencode
 
 import pdfplumber
 from docx import Document
@@ -179,6 +180,24 @@ def get_me(
 
 CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.getenv(
+    "GOOGLE_REDIRECT_URI", "http://localhost:8000/api/v1/auth/google/callback"
+)
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+
+def _oauth_success_redirect(user: User) -> RedirectResponse:
+    access_token = security_service.create_access_token({"sub": str(user.id)})
+    refresh_token = security_service.create_refresh_token({"sub": str(user.id)})
+    params = urlencode(
+        {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+        }
+    )
+    return RedirectResponse(f"{FRONTEND_URL}/auth/oauth-callback?{params}")
 
 
 @router.get("/github/login")
@@ -191,9 +210,8 @@ async def github_login():
 
 @router.get("/github/callback")
 async def github_callback(code: str, db: Session = Depends(get_db)):
-    """Step 2: Exchange code for token and save user to database"""
+    """Step 2: Exchange code for token, create/login user, then redirect to frontend."""
     async with httpx.AsyncClient() as client:
-        # 1. Exchange the temporary 'code' for a real Access Token
         response = await client.post(
             "https://github.com/login/oauth/access_token",
             data={
@@ -207,35 +225,159 @@ async def github_callback(code: str, db: Session = Depends(get_db)):
         access_token = token_data.get("access_token")
 
         if not access_token:
-            return {"error": "Failed to retrieve access token"}
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to retrieve GitHub access token",
+            )
 
-        # 2. Use the token to fetch the user's GitHub profile
         user_res = await client.get(
             "https://api.github.com/user",
             headers={"Authorization": f"token {access_token}"},
         )
+        if not user_res.is_success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to fetch GitHub profile",
+            )
         profile = user_res.json()
 
-        # 3. Check if user exists in PostgreSQL; if not, create them
-        user = db.query(User).filter(User.github_id == str(profile["id"])).first()
+        email = profile.get("email")
+        if not email:
+            emails_res = await client.get(
+                "https://api.github.com/user/emails",
+                headers={"Authorization": f"token {access_token}"},
+            )
+            if emails_res.is_success:
+                emails = emails_res.json()
+                primary = next(
+                    (e for e in emails if e.get("primary") and e.get("verified")),
+                    None,
+                )
+                fallback = next((e for e in emails if e.get("verified")), None)
+                email = (primary or fallback or {}).get("email")
+
+        if not email:
+            login = profile.get("login", "github-user")
+            email = f"{login}@users.noreply.github.com"
+
+        user = db.query(User).filter(User.email == email).first()
 
         if not user:
             user = User(
-                github_id=str(profile["id"]),
-                username=profile["login"],
+                email=email,
+                full_name=profile.get("name") or profile.get("login"),
+                username=profile.get("login"),
                 access_token=access_token,
+                profile_pic_url=profile.get("avatar_url"),
+                is_active=True,
             )
             db.add(user)
         else:
-            # Update the token if the user is returning
             user.access_token = access_token
+            if not user.full_name:
+                user.full_name = profile.get("name") or profile.get("login")
+            if not user.profile_pic_url:
+                user.profile_pic_url = profile.get("avatar_url")
 
         db.commit()
-        return {
-            "status": "success",
-            "message": f"Welcome {user.username}!",
-            "github_id": user.github_id,
+        db.refresh(user)
+        return _oauth_success_redirect(user)
+
+
+@router.get("/google/login")
+async def google_login():
+    """Step 1: Send user to Google OAuth consent screen."""
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Google OAuth is not configured",
+        )
+
+    params = urlencode(
+        {
+            "client_id": GOOGLE_CLIENT_ID,
+            "redirect_uri": GOOGLE_REDIRECT_URI,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "offline",
+            "prompt": "consent",
         }
+    )
+    return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{params}")
+
+
+@router.get("/google/callback")
+async def google_callback(code: str, db: Session = Depends(get_db)):
+    """Step 2: Exchange Google code, create/login user, then redirect to frontend."""
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Google OAuth is not configured",
+        )
+
+    async with httpx.AsyncClient() as client:
+        token_res = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "redirect_uri": GOOGLE_REDIRECT_URI,
+                "grant_type": "authorization_code",
+            },
+        )
+
+        if not token_res.is_success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to exchange Google authorization code",
+            )
+
+        token_data = token_res.json()
+        provider_access_token = token_data.get("access_token")
+        if not provider_access_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing Google access token",
+            )
+
+        profile_res = await client.get(
+            "https://openidconnect.googleapis.com/v1/userinfo",
+            headers={"Authorization": f"Bearer {provider_access_token}"},
+        )
+
+        if not profile_res.is_success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to fetch Google profile",
+            )
+
+        profile = profile_res.json()
+        email = profile.get("email")
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Google account has no email",
+            )
+
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            user = User(
+                email=email,
+                full_name=profile.get("name"),
+                profile_pic_url=profile.get("picture"),
+                is_active=True,
+            )
+            db.add(user)
+        else:
+            if not user.full_name:
+                user.full_name = profile.get("name")
+            if not user.profile_pic_url:
+                user.profile_pic_url = profile.get("picture")
+
+        db.commit()
+        db.refresh(user)
+        return _oauth_success_redirect(user)
 
 
 @router.get("/user/{user_id}")

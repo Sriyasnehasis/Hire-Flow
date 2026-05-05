@@ -111,19 +111,18 @@ export default function JobsPage() {
     <DashboardLayout title="Jobs">
       <div className="space-y-8">
         {/* Header */}
-        <div className="pb-6 border-b border-white/5">
-          <h1 className="text-4xl font-bold text-white mb-2">Job Board</h1>
-          <p className="text-slate-400 text-lg">
-            Live job listings from Adzuna, LinkedIn, and partner APIs.
+        <div className="pb-6 border-b border-slate-100">
+          <h1 className="text-3xl font-extrabold text-slate-900 mb-1">Job Board</h1>
+          <p className="text-slate-500 text-base">
+            Live job listings synced from Adzuna and institutional partners.
           </p>
         </div>
 
-        {/* Search */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              size={20}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
             />
             <input
               type="text"
@@ -131,12 +130,12 @@ export default function JobsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Search by title, stack, or company..."
-              className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+              className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
             />
           </div>
           <div className="relative">
             <MapPin
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               size={18}
             />
             <input
@@ -145,14 +144,14 @@ export default function JobsPage() {
               onChange={(e) => setSearchLocation(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Location..."
-              className="w-full md:w-48 pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+              className="w-full md:w-48 pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
             />
           </div>
           <button
             onClick={handleSearch}
-            className="btn-gradient !rounded-xl px-6 py-4"
+            className="btn-primary px-8 py-3.5"
           >
-            <Search size={18} /> Search
+            Search
           </button>
         </div>
 
@@ -191,7 +190,7 @@ export default function JobsPage() {
               }}
               className="text-indigo-400 font-semibold hover:underline"
             >
-              Search "Developer"
+              Search &quot;Developer&quot;
             </button>
           </div>
         ) : (
@@ -202,7 +201,7 @@ export default function JobsPage() {
                 className="glass-card p-6 md:p-8 group hover:border-indigo-500/20"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                  <div className="w-14 h-14 bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center font-bold text-2xl text-indigo-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                  <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center font-bold text-lg text-indigo-600 group-hover:scale-110 transition-transform flex-shrink-0 shadow-sm">
                     {job.company?.[0] || "?"}
                   </div>
                   <div className="flex-1 min-w-0">

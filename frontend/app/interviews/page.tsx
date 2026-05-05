@@ -1,198 +1,354 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Mic, Sparkles, Target, BarChart3, Play, MessageSquare } from "lucide-react";
+import { 
+  Mic, 
+  Sparkles, 
+  Zap, 
+  Terminal, 
+  Play, 
+  Volume2, 
+  RotateCcw,
+  Activity
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function InterviewsPage() {
+  const { token } = useAuth() as any;
   const [interviewActive, setInterviewActive] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<any>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const questions = [
-    "Tell me about yourself and your background.",
-    "What is your strongest technical skill and why?",
-    "Describe a challenging project you worked on.",
-    "How do you handle feedback and criticism?",
-    "Where do you see yourself in 5 years?",
-  ];
+  const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const apiBase = rawApiUrl.endsWith("/api/v1") ? rawApiUrl : `${rawApiUrl}/api/v1`;
 
-  const handleStartInterview = () => {
-    setInterviewActive(true);
-    setCurrentQuestion(0);
+  const handleStartInterview = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/interviews/start-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ role: "senior_dev", interview_type: "voice" }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setSessionId(data.session_id);
+      setCurrentQuestion(data.current_question);
+      setInterviewActive(true);
+    } catch (err) {
+      alert("System Offline. Check Backend.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleNext = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      setInterviewActive(false);
+  const submitAnswer = async (transcript: string) => {
+    if (!sessionId || !transcript) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/interviews/sessions/${sessionId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          question_id: currentQuestion?.question_id || 0,
+          user_answer: transcript,
+          answer_type: "voice"
+        }),
+      });
+      const data = await res.json();
+      if (data.status === "interview_complete") {
+        setInterviewActive(false);
+        setFeedback(null);
+        alert(`Assessment Complete. Score: ${data.overall_score}/10`);
+      } else {
+        setFeedback(data.feedback?.overall_comment || data.feedback);
+        setCurrentQuestion({ question_text: data.next_question, question_id: 0 });
+      }
+    } catch (err) {
+      alert("Transmission Error.");
+    } finally {
+      setLoading(false);
+      setIsRecording(false);
     }
   };
 
   return (
-    <DashboardLayout title="Voice Labs">
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="pb-6 border-b border-white/5 flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <DashboardLayout>
+      <div className="max-w-5xl mx-auto space-y-12">
+        
+        {/* 🔥 Kinetic Header - Semantic Color Update */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-12 border-b border-white/5">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Voice Coach</h1>
-            <p className="text-slate-400 text-lg">Real-time voice analysis for behavior and technical depth.</p>
+            <div className="text-[#00E5FF] font-black text-[10px] tracking-[0.5em] uppercase mb-5 flex items-center gap-3">
+              <div className="flex gap-0.5 items-end h-3">
+                {[...Array(4)].map((_, i) => (
+                  <motion.div key={i} animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }} className="w-1 bg-[#00E5FF] rounded-full" />
+                ))}
+              </div>
+              Neural Voice Labs
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white">
+              Voice <span className="outline-text !text-transparent">Coach.</span>
+            </h1>
           </div>
           {!interviewActive && (
-            <button onClick={handleStartInterview} className="btn-gradient !rounded-xl px-6 py-3">
-              <Play size={18} /> Begin Session
-            </button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleStartInterview}
+              className="px-8 py-3.5 bg-black border border-[#00E5FF]/40 rounded-xl flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-white hover:bg-[#00E5FF]/10 transition-all group"
+            >
+              Initialize Node 
+              <div className="w-6 h-6 rounded-lg bg-[#00E5FF]/10 flex items-center justify-center group-hover:bg-[#00E5FF] group-hover:text-black transition-colors">
+                <Play size={10} fill="currentColor" />
+              </div>
+            </motion.button>
           )}
         </div>
 
-        {!interviewActive ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Prep Card */}
-            <div className="lg:col-span-2 glass-card overflow-hidden relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-cyan-600/10" />
-              <div className="relative z-10 p-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-indigo-300 text-xs font-bold mb-6">
-                  <Sparkles size={12} /> LAB ENVIRONMENT
+        <AnimatePresence mode="wait">
+          {!interviewActive ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
+              key="prep"
+              className="grid grid-cols-1 lg:grid-cols-3 gap-10"
+            >
+              <div className="lg:col-span-2 glass-card p-12 overflow-hidden bg-[#1c1410]/20 relative group border-[#FF5C1A]/10">
+                {/* Waveform Visualization Replacement for semicircle */}
+                <div className="absolute -top-10 -right-10 opacity-[0.03] rotate-12 pointer-events-none group-hover:opacity-[0.08] transition-opacity">
+                   <Volume2 size={300} strokeWidth={0.5} />
                 </div>
-                <h2 className="text-4xl font-bold text-white mb-6">
-                  Ready to practice for <br /><span className="text-gradient">your dream role?</span>
+                
+                <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-10 leading-none italic">
+                   Simulate the <br /> 
+                   <motion.span 
+                    animate={{ opacity: [1, 0.8, 1], x: [0, -1, 1, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.2, repeatDelay: 3 }}
+                    className="text-[#FF5C1A]"
+                   >
+                     UNKNOWN.
+                   </motion.span>
                 </h2>
 
-                <div className="space-y-5 mb-10 max-w-sm">
-                  {[
-                    { icon: Target, title: "Real-time Feedback", desc: "AI analyzes your confidence and keywords." },
-                    { icon: MessageSquare, title: "AI Follow-ups", desc: "Questions adapt to your answers." },
-                  ].map((item, i) => (
-                    <div key={i} className="flex gap-4 items-center">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                        <item.icon size={20} className="text-indigo-400" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-white">{item.title}</p>
-                        <p className="text-sm text-slate-400">{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="space-y-8 mb-16 relative z-10">
+                   {[
+                     { t: "Confidence Scan", d: "Neural voice patterns analyze stress & logic flow.", i: Mic },
+                     { t: "Deep Feedback", d: "Real-time diagnostic on behavioral alignment.", i: Terminal },
+                   ].map((item, i) => (
+                     <div key={i} className="flex gap-8 items-start">
+                       <div className="relative">
+                         <div className="absolute -inset-2 bg-[#FF5C1A]/10 rounded-full animate-pulse blur-md" />
+                         <div className="w-12 h-12 rounded-xl bg-[#FF5C1A]/5 border border-[#FF5C1A]/20 flex items-center justify-center text-[#FF5C1A] group-hover:rotate-3 transition-all relative z-10">
+                           <item.i size={20} />
+                         </div>
+                       </div>
+                       <div className="space-y-1.5">
+                         <h4 className="font-black text-white uppercase text-xs tracking-widest">{item.t}</h4>
+                         <p className="text-white/30 text-[13px] font-bold leading-relaxed">{item.d}</p>
+                       </div>
+                     </div>
+                   ))}
                 </div>
 
-                <button onClick={handleStartInterview} className="px-10 py-4 bg-white text-slate-900 rounded-2xl font-bold text-lg hover:bg-slate-100 transition-colors">
-                  Start Full Interview
-                </button>
-              </div>
-
-              <div className="absolute right-[-80px] top-1/2 -translate-y-1/2 opacity-[0.05]">
-                <Mic size={350} className="text-white" strokeWidth={0.5} />
-              </div>
-            </div>
-
-            {/* History & Streak */}
-            <div className="space-y-6">
-              <div className="glass-card p-6">
-                <h3 className="text-lg font-bold text-white mb-5 flex items-center justify-between">
-                  Recent Scores <BarChart3 size={18} className="text-slate-500" />
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { date: "Oct 12", score: 88, role: "SWE" },
-                    { date: "Oct 09", score: 72, role: "Backend" },
-                    { date: "Oct 05", score: 64, role: "Frontend" },
-                  ].map((s, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/20 transition-colors">
-                      <div>
-                        <p className="text-sm font-bold text-white">{s.role}</p>
-                        <p className="text-xs text-slate-500">{s.date}</p>
-                      </div>
-                      <p className="text-lg font-bold text-indigo-400">{s.score}%</p>
-                    </div>
-                  ))}
-                </div>
-                <button className="w-full mt-4 py-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-sm font-semibold text-slate-300 transition-colors">
-                  View Full Report
-                </button>
-              </div>
-
-              <div className="glass-card p-6 bg-gradient-to-br from-indigo-500/10 to-transparent">
-                <h3 className="text-lg font-bold text-white mb-2">Practice Streak</h3>
-                <p className="text-sm text-slate-400 mb-4">Top 5% of active students this week.</p>
-                <div className="flex gap-1">
-                  {[1, 1, 1, 1, 0, 0, 0].map((active, i) => (
-                    <div key={i} className={`flex-1 h-3 rounded-full ${active ? 'bg-gradient-to-r from-indigo-500 to-cyan-500' : 'bg-white/5'}`} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Active Interview */
-          <div className="max-w-3xl mx-auto py-8">
-            <div className="mb-10 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Live AI Assessment</span>
-              </div>
-              <span className="text-sm font-bold text-indigo-400">Q{currentQuestion + 1} / {questions.length}</span>
-            </div>
-
-            <div className="glass-card-strong p-8 md:p-12 text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white italic leading-snug">
-                "{questions[currentQuestion]}"
-              </h2>
-            </div>
-
-            <div className="flex flex-col items-center gap-8">
-              <div className={`relative transition-all duration-500 ${isRecording ? 'scale-110' : 'scale-100'}`}>
-                {isRecording && (
-                  <>
-                    <div className="absolute inset-0 w-36 h-36 rounded-full bg-indigo-500/10 animate-ping" />
-                    <div className="absolute inset-[-16px] rounded-full border border-indigo-500/20 animate-pulse" />
-                  </>
-                )}
-                <div className={`w-32 h-32 rounded-full flex items-center justify-center transition-all shadow-2xl ${
-                  isRecording ? 'bg-gradient-to-br from-indigo-500 to-cyan-500 text-white' : 'glass-card-strong text-slate-400'
-                }`}>
-                  <Mic size={48} className={isRecording ? 'animate-bounce' : ''} />
-                </div>
-              </div>
-
-              <p className={`text-lg font-bold ${isRecording ? 'text-indigo-400' : 'text-slate-500'}`}>
-                {isRecording ? "Analyzing voice..." : "Ready to listen"}
-              </p>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setIsRecording(!isRecording)}
-                  className={`px-10 py-4 rounded-2xl font-bold text-lg transition-all ${
-                    isRecording ? 'bg-white/10 text-white border border-white/10' : 'btn-gradient'
-                  }`}
+                <motion.button
+                  onClick={handleStartInterview}
+                  disabled={loading}
+                  whileHover="hover"
+                  className="relative px-12 py-5 bg-black border border-[#FF5C1A]/40 rounded-xl font-black text-xs uppercase tracking-[0.4em] text-white hover:bg-[#FF5C1A]/10 transition-all overflow-hidden flex items-center justify-center"
                 >
-                  {isRecording ? "Finish Answer" : "Start Recording"}
-                </button>
+                  <motion.div 
+                    variants={{ hover: { opacity: 1, x: 0 } }}
+                    initial={{ opacity: 0, x: -20 }}
+                    className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 pointer-events-none"
+                  >
+                    {[...Array(12)].map((_, i) => (
+                      <motion.div key={i} animate={{ height: [4, 16, 4] }} transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.05 }} className="w-1 bg-[#FF5C1A]/20" />
+                    ))}
+                  </motion.div>
+                  <span className="relative z-10">{loading ? "Synching..." : "Launch Full Simulation"}</span>
+                </motion.button>
+              </div>
+
+              {/* History Nodes - Staggered Animations */}
+              <div className="space-y-6">
+                <div className="glass-card p-8 bg-white/[0.02]">
+                  <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mb-10">Recent Logs</h3>
+                  <div className="space-y-4">
+                    {[65, 88, 42].map((s, i) => (
+                      <motion.div 
+                        key={i} 
+                        initial={{ opacity: 0, x: 40 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className={`flex items-center justify-between p-5 bg-white/[0.02] border-l-2 rounded-xl group hover:bg-white/[0.04] transition-all
+                          ${s > 80 ? 'border-l-[#00FFB3]/40' : s > 60 ? 'border-l-[#FFB300]/40' : 'border-l-[#FF4D4D]/40'}`}
+                      >
+                        <div className="text-[10px] font-bold text-white/40 tracking-widest">LOG_NODE_{i+102}</div>
+                        <div className={`font-black text-xl tracking-tighter ${s > 80 ? 'text-[#00FFB3]' : s > 60 ? 'text-[#FFB300]' : 'text-[#FF4D4D]'}`}>{s}%</div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            /* 🔥 Active High-Fidelity Interface */
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              key="active"
+              className="max-w-4xl mx-auto py-8"
+            >
+              <div className="flex items-center justify-between mb-12 px-4">
+                <div className="flex items-center gap-4">
+                   <div className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF] animate-pulse" />
+                   <div className="text-[9px] font-black uppercase tracking-[0.4em] text-white/30">Neural Link Stable</div>
+                </div>
+                <div className="h-px flex-1 mx-10 bg-white/5" />
+                <div className="text-[10px] font-black text-[#FF5C1A] uppercase tracking-[0.3em]">Question #01</div>
+              </div>
+
+              <div className="glass-card bg-[#1c1410]/40 p-16 md:p-24 text-center mb-12 border-[#FF5C1A]/20 group overflow-hidden relative shadow-[0_0_80px_rgba(255,92,26,0.05)]">
+                {/* Hero Audio Waveform (Animated Background) */}
+                <div className="absolute inset-0 flex items-center justify-center gap-1.5 opacity-[0.03] pointer-events-none">
+                  {[...Array(60)].map((_, i) => (
+                    <motion.div 
+                      key={i} 
+                      animate={{ height: isRecording ? [20, 120, 20] : [20, 50, 20] }} 
+                      transition={{ repeat: Infinity, duration: isRecording ? 0.3 : 2, delay: i * 0.01 }} 
+                      className="w-1 bg-[#FF5C1A] rounded-full" 
+                    />
+                  ))}
+                </div>
+
+                {/* Tactical Overlays */}
+                <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5C1A]/50 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5C1A]/20 to-transparent" />
+                
+                <div className="space-y-6 relative z-10">
+                  <div className="text-[#FF5C1A] font-black text-[9px] tracking-[0.4em] uppercase opacity-60">
+                    Incoming Transmission // {currentQuestion?.difficulty || 'Standard'}
+                  </div>
+                  <motion.h2 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    key={currentQuestion?.question_text}
+                    className="text-2xl md:text-5xl font-black text-white leading-[1.1] uppercase tracking-tighter"
+                  >
+                    {currentQuestion?.question_text || "Initializing Interview Node..."}
+                  </motion.h2>
+                </div>
+              </div>
+
+              {feedback && (
+                <motion.div 
+                   initial={{ opacity: 0, x: -20 }}
+                   animate={{ opacity: 1, x: 0 }}
+                   className="mb-12 p-8 bg-[#FF5C1A]/5 border-l-4 border-[#FF5C1A] rounded-xl flex gap-6 items-start"
+                >
+                   <Sparkles className="text-[#FF5C1A] flex-shrink-0" size={24} />
+                   <p className="text-[13px] font-bold text-[#FF5C1A]/80 leading-relaxed tracking-tight">{feedback}</p>
+                </motion.div>
+              )}
+
+              <div className="flex flex-col items-center gap-12">
+                <div className="relative">
+                  <AnimatePresence>
+                    {isRecording && (
+                      <motion.div 
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1.4, opacity: 0.3 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="absolute -inset-8 bg-[#FF5C1A] rounded-full blur-2xl pointer-events-none" 
+                      />
+                    )}
+                  </AnimatePresence>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                       if(isRecording) submitAnswer("Simulated precision response with deep technical context.");
+                       else setIsRecording(true);
+                    }}
+                    disabled={loading}
+                    className={`w-32 h-32 rounded-full flex flex-col items-center justify-center transition-all duration-700 shadow-2xl relative z-10 border-2 ${
+                      isRecording 
+                        ? 'bg-[#FF5C1A] text-white border-white/20 shadow-[0_0_80px_rgba(255,92,26,0.5)]' 
+                        : 'bg-black text-[#FF5C1A] border-[#FF5C1A]/20 hover:border-[#FF5C1A]/60'
+                    }`}
+                  >
+                    {isRecording ? (
+                      <Zap size={40} className="animate-pulse" />
+                    ) : (
+                      <Mic size={40} className="group-hover:scale-110 transition-transform" />
+                    )}
+                    <div className="absolute -bottom-1 text-[8px] font-black tracking-widest opacity-40">
+                      {isRecording ? "LIVE" : "PUSH"}
+                    </div>
+                  </motion.button>
+                </div>
+
+                <div className="text-center space-y-5">
+                  <p className="text-[9px] font-black uppercase tracking-[0.5em] text-white/20">
+                    {isRecording ? "Neural Stream Incoming" : "Standby for Signal"}
+                  </p>
+                  
+                  {isRecording && (
+                    <div className="flex gap-1.5 justify-center h-5 items-end">
+                      {[...Array(16)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          animate={{ height: [4, 20, 4] }}
+                          transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.03 }}
+                          className="w-1 bg-[#FF5C1A] rounded-full"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {!isRecording && (
-                  <button onClick={handleNext} className="px-6 py-4 glass-card font-bold text-slate-300 hover:text-white">
-                    Skip
+                  <button onClick={() => setInterviewActive(false)} className="text-[10px] font-black uppercase tracking-[0.4em] text-white/10 hover:text-white/40 transition-colors pt-12">
+                    Terminate Link :: Exit
                   </button>
                 )}
               </div>
-            </div>
 
-            {/* Live Metrics */}
-            <div className="mt-16 grid grid-cols-3 gap-6">
-              {[
-                { label: "Confidence", color: "from-emerald-500 to-teal-500", width: isRecording ? '75%' : '0%' },
-                { label: "Keywords", color: "from-indigo-500 to-blue-500", width: isRecording ? '40%' : '0%' },
-                { label: "Logic Depth", color: "from-purple-500 to-pink-500", width: isRecording ? '60%' : '0%' },
-              ].map((m, i) => (
-                <div key={i} className="text-center">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">{m.label}</p>
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div className={`h-full bg-gradient-to-r ${m.color} rounded-full transition-all duration-1000`} style={{ width: m.width }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+              {/* Real-time Oscilloscope Grid - Semantic Color Update */}
+              <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10">
+                 {[
+                   { m: 'Linguistic Depth', val: 72, color: '#00E5FF' },
+                   { m: 'Cognitive Load', val: 45, color: '#FFB300' },
+                   { m: 'Emotional Resonance', val: 89, color: '#00FFB3' }
+                 ].map((metric) => (
+                   <div key={metric.m} className="space-y-4">
+                     <div className="flex justify-between items-end">
+                       <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{metric.m}</span>
+                       <span className="text-[10px] font-black uppercase italic" style={{ color: metric.color }}>{metric.val}%MATCH</span>
+                     </div>
+                     <div className="h-0.5 w-full bg-white/5 relative overflow-hidden">
+                        <motion.div 
+                           initial={{ width: 0 }}
+                           animate={{ width: `${metric.val}%` }}
+                           transition={{ duration: 1.5, delay: 0.5 }}
+                           className="absolute inset-y-0 bg-current"
+                           style={{ color: metric.color }}
+                        />
+                     </div>
+                   </div>
+                 ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   );

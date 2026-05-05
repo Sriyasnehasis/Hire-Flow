@@ -15,6 +15,7 @@ const config: Config = {
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
       },
       colors: {
+        orange: "#FF5C1A",
         brand: {
           50: "#eff6ff",
           100: "#dbeafe",

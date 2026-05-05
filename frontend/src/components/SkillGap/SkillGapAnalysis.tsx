@@ -130,17 +130,17 @@ export default function SkillGapAnalysis({
   return (
     <div className="space-y-6">
       {/* Overall Match Score */}
-      <div className="bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 border border-indigo-500/30 rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8">
+        <h2 className="text-xl font-extrabold text-slate-900 mb-2">
           Skill Gap Analysis
         </h2>
 
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-lg font-semibold text-slate-300">
-              Overall Match
+            <span className="text-lg font-semibold text-slate-600">
+              Confidence Score
             </span>
-            <span className="text-3xl font-bold text-blue-600">
+            <span className="text-3xl font-extrabold text-indigo-600">
               {matchPercentage}%
             </span>
           </div>
@@ -202,7 +202,7 @@ export default function SkillGapAnalysis({
               matchedKeywords.map((skill: string, idx: number) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-300"
+                  className="inline-flex items-center px-4 py-1.5 rounded-lg text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100"
                 >
                   {skill}
                 </span>
@@ -225,7 +225,7 @@ export default function SkillGapAnalysis({
               missingKeywords.map((skill: string, idx: number) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-300"
+                  className="inline-flex items-center px-4 py-1.5 rounded-lg text-sm font-semibold bg-red-50 text-red-700 border border-red-100"
                 >
                   {skill}
                 </span>

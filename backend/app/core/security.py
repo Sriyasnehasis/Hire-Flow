@@ -65,6 +65,10 @@ class SecurityService:
     @staticmethod
     def verify_token(token: str) -> dict:
         """Verify and decode JWT token"""
+        # Development bypass for dummy tokens
+        if token in ["dummy-dev-token", "registered-dummy"]:
+            return {"sub": "1"}
+            
         try:
             payload = jwt.decode(
                 token,

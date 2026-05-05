@@ -21,12 +21,13 @@ class User(Base):
     educational_qualification = Column(String, nullable=True)
     years_of_experience = Column(Float, default=0.0)
     current_company = Column(String, nullable=True)
+    current_status = Column(String, nullable=True) # e.g. "Looking for Job"
     primary_skills = Column(JSON, nullable=False, default=list)
     preferred_roles = Column(JSON, nullable=False, default=list)
     research_interests = Column(JSON, nullable=False, default=list)
     certifications = Column(JSON, nullable=False, default=list)
     linkedin_url = Column(String, nullable=True)
-    # github_url = Column(String, nullable=True)
+    github_url = Column(String, nullable=True)
 
     # GitHub OAuth fields (used by existing GitHub login flow)
     # TEMPORARILY COMMENTED OUT DUE TO SQLALCHEMY METADATA ISSUE

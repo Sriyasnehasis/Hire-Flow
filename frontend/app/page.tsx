@@ -1,182 +1,253 @@
 "use client";
 
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Zap, Target, Mic, Briefcase, Sparkles, Map, Users, Shield, FileText, TrendingUp } from "lucide-react";
+import { motion, useInView } from "framer-motion";
+import { 
+  Sparkles, 
+  Target, 
+  Mic, 
+  Globe,
+  Database,
+  BarChart3,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
+import { SiteLogo } from "@/components/SiteLogo";
+import { ParticleEntity } from "@/components/ParticleEntity";
+import { KineticText } from "@/components/KineticText";
+import { LiveTicker } from "@/components/InteractiveElements";
+import { SpotlightCard } from "@/components/SpotlightCard";
+import { AmbientGlow, TiltContainer, MagneticButton } from "@/components/AdvancedAnimations";
+
+const CountUp = ({ value, suffix = "" }: { value: number | string, suffix?: string }) => {
+    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+    const [count, setCount] = useState(0);
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true });
+
+    useEffect(() => {
+        if (isInView) {
+            let start = 0;
+            const duration = 2000;
+            const increment = numericValue / (duration / 16);
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= numericValue) {
+                    setCount(numericValue);
+                    clearInterval(timer);
+                } else {
+                    setCount(start);
+                }
+            }, 16);
+            return () => clearInterval(timer);
+        }
+    }, [isInView, numericValue]);
+
+    return <span ref={ref}>{Math.floor(count)}{suffix}</span>;
+};
 
 export default function Home() {
+  const containerRef = useRef(null);
+  
   return (
-    <div className="min-h-screen relative">
-      {/* Floating Orbs */}
-      <div className="orb orb-blue w-[600px] h-[600px] top-[-200px] left-[-100px] animate-pulse-glow" />
-      <div className="orb orb-cyan w-[500px] h-[500px] top-[20%] right-[-150px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
-      <div className="orb orb-purple w-[400px] h-[400px] bottom-[30%] left-[10%] animate-pulse-glow" style={{ animationDelay: '4s' }} />
+    <div ref={containerRef} className="relative min-h-screen bg-black overflow-x-hidden font-sans selection:bg-cyan-500/30">
+      
+      {/* 🔮 High-Impact Visual: Ambient Cursor Glow */}
+      <AmbientGlow />
 
-      {/* Navigation */}
-      <nav className="fixed top-0 inset-x-0 z-50 glass-nav h-20 flex items-center">
-        <div className="container-wide flex justify-between items-center w-full">
-          <Link href="/" className="flex items-center gap-3">
-            <img src="/hireflow-logo.png" alt="HireFlow" className="w-10 h-10 rounded-lg" />
-            <span className="text-2xl font-bold tracking-tight text-white">
-              Hire<span className="text-gradient">Flow</span>
-            </span>
+      {/* 💠 Pillar 4 Grid Overlay */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black,transparent)] mesh-bg" />
+      <div className="opacity-[0.1]">
+        <ParticleEntity />
+      </div>
+
+      {/* 🧭 Navbar */}
+      <motion.nav 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed top-0 inset-x-0 h-20 z-[100] flex items-center px-10 bg-black/50 backdrop-blur-3xl border-b border-white/10"
+      >
+        <div className="max-w-7xl mx-auto flex justify-between items-center w-full">
+          <Link href="/" className="group flex items-center gap-4">
+            <SiteLogo className="w-11 h-11 relative z-10" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-white/30 group-hover:text-white transition-all">HireFlow</span>
           </Link>
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="nav-link">Features</a>
-            <a href="#stats" className="nav-link">Stats</a>
-            <Link href="/auth/login" className="nav-link">Sign In</Link>
-            <Link href="/auth/signup" className="btn-gradient px-6 py-2.5 text-sm !rounded-xl">
-              Get Started Free <Zap size={14} className="fill-current" />
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <header className="pt-40 pb-20 md:pt-56 md:pb-32 relative">
-        <div className="container-wide text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card-strong text-indigo-300 text-sm font-semibold mb-8 animate-reveal" style={{ animationDelay: '0.1s' }}>
-            <Sparkles size={14} className="text-indigo-400" /> Powered by Gemini 2.0 Flash AI
-          </div>
-          <h1 className="text-hero mb-8 animate-reveal" style={{ animationDelay: '0.2s' }}>
-            Craft your future, one <br />
-            <span className="text-gradient italic">intelligent</span> line at a time.
-          </h1>
-          <p className="max-w-2xl mx-auto text-xl text-slate-400 mb-12 leading-relaxed animate-reveal" style={{ animationDelay: '0.3s' }}>
-            The AI-powered ecosystem built for the modern applicant.
-            Automate your job search, score your resume, and practice interviews with high-end AI.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-reveal" style={{ animationDelay: '0.4s' }}>
-            <Link href="/auth/signup" className="btn-gradient text-lg">
-              Analyze My Resume <ArrowRight size={20} />
-            </Link>
-            <Link href="/interviews" className="btn-outline-glass text-lg">
-              Mock Interview Demo
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Stats Section */}
-      <section id="stats" className="py-20 relative z-10">
-        <div className="container-wide">
-          <div className="glass-card-strong p-8 md:p-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: "99%", label: "ATS Accuracy" },
-              { value: "2k+", label: "Monthly Hires" },
-              { value: "4.9/5", label: "User Rating" },
-              { value: "15s", label: "Analysis Time" },
-            ].map((stat, i) => (
-              <div key={i} className="animate-reveal" style={{ animationDelay: `${0.5 + i * 0.1}s` }}>
-                <div className="text-4xl font-bold text-white mb-1 glow-text">{stat.value}</div>
-                <div className="text-sm text-slate-400 font-medium">{stat.label}</div>
-              </div>
+          
+          <div className="hidden md:flex items-center gap-12">
+            {['Strategy', 'Data', 'Network', 'Practice'].map(item => (
+              <a key={item} href="#" className="relative text-[11px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-all cursor-pointer group">
+                {item}
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-[#00B8D4] transition-all duration-300 group-hover:w-full" />
+              </a>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="py-24 relative z-10">
-        <div className="container-wide">
-          <div className="mb-16 text-center">
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Everything to get <br /><span className="text-gradient">unfairly</span> hired.
-            </h2>
-            <p className="text-xl text-slate-400 max-w-xl mx-auto">A unified AI platform to manage your entire career trajectory.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* AI Resume - Large */}
-            <div className="md:col-span-2 glass-card p-10 group relative overflow-hidden">
-              <div className="relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Sparkles className="text-indigo-400" size={28} />
-                </div>
-                <h3 className="text-3xl font-bold text-white mb-4">AI Resume Composer</h3>
-                <p className="text-slate-400 text-lg max-w-md mb-8">
-                  Our algorithm writes professional summaries and bullet points that actually resonate with recruiters and ATS systems.
-                </p>
-                <Link href="/resume" className="inline-flex items-center gap-2 text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">
-                  Start Building <ArrowRight size={18} />
-                </Link>
-              </div>
-              {/* Decorative */}
-              <div className="absolute right-[-50px] bottom-[-50px] w-64 h-64 orb orb-blue opacity-20" />
-            </div>
-
-            {/* ATS Shield */}
-            <div className="glass-card p-8 group">
-              <div className="w-12 h-12 rounded-2xl bg-red-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Shield className="text-red-400" size={24} />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">ATS Shield</h3>
-              <p className="text-slate-400 mb-8">Real-time analysis against any job description with actionable keyword suggestions.</p>
-              <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Readiness</span>
-                  <span className="text-indigo-400 font-bold">88%</span>
-                </div>
-                <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                  <div className="bg-gradient-to-r from-indigo-500 to-cyan-500 h-full w-[88%] rounded-full" />
-                </div>
-              </div>
-            </div>
-
-            {/* Voice Coach */}
-            <div className="glass-card p-8 group">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Mic className="text-cyan-400" size={24} />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Voice Coach</h3>
-              <p className="text-slate-400 mb-6">Practice with a live AI interviewer that listens, analyzes, and critiques your verbal answers.</p>
-              <div className="flex gap-2">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex-1 h-8 bg-gradient-to-t from-cyan-500/20 to-transparent rounded-lg animate-pulse" style={{ animationDelay: `${i * 0.3}s` }} />
-                ))}
-              </div>
-            </div>
-
-            {/* Job Board - Wide */}
-            <div className="md:col-span-2 glass-card p-10 group relative overflow-hidden">
-              <div className="flex flex-col md:flex-row gap-10 items-center relative z-10">
-                <div className="flex-1">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <Briefcase className="text-emerald-400" size={24} />
-                  </div>
-                  <h3 className="text-3xl font-bold text-white mb-4">Smart Job Board</h3>
-                  <p className="text-slate-400 text-lg mb-6">Curated opportunities matched to your profile with AI-powered relevance scoring.</p>
-                  <Link href="/jobs" className="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">
-                    Browse Jobs <ArrowRight size={18} />
-                  </Link>
-                </div>
-                <div className="flex-1 grid grid-cols-2 gap-3">
-                  {["Amazon", "Google", "Microsoft", "Meta"].map((company, i) => (
-                    <div key={i} className="glass-card-strong p-4 text-center group-hover:border-emerald-500/20 transition-colors">
-                      <div className="text-2xl font-bold text-white mb-1">{company[0]}</div>
-                      <div className="text-xs text-slate-400">{company}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="absolute right-[-80px] top-[-80px] w-64 h-64 orb orb-cyan opacity-10" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <footer className="py-32 relative z-10 overflow-hidden">
-        <div className="container-wide text-center relative z-10">
-          <h2 className="text-5xl md:text-7xl font-bold text-white mb-10 leading-tight">
-            Ready to start <br />your <span className="text-gradient">success</span> story?
-          </h2>
-          <Link href="/auth/signup" className="btn-gradient text-xl px-12 py-5">
-            Get Hired Now — It's Free
+          
+          <Link href="/auth/login" className="px-6 py-2.5 bg-white text-black font-bold text-[11px] uppercase tracking-widest rounded-full hover:bg-white/90 transition-all border border-white/10 shadow-sm">
+            Access Portal
           </Link>
-          <p className="mt-10 text-slate-500">Join 50,000+ applicants using HireFlow.</p>
         </div>
-        <div className="orb orb-purple w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse-glow" />
-      </footer>
+      </motion.nav>
+
+      <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-6 overflow-hidden">
+        
+        <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.15,
+                  delayChildren: 0.5
+                }
+              }
+            }}
+            className="text-center space-y-10 z-10 w-full max-w-5xl"
+        >
+            <motion.div 
+              variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
+              className="text-slate-500 text-[9px] font-bold tracking-[0.4em] uppercase"
+            >
+                Neural Career OS for Elite Professionals
+            </motion.div>
+
+            {/* 🏔️ High-Impact: 3D Tilt Headline Container */}
+            <TiltContainer className="py-6">
+              <motion.div 
+                variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }}
+                className="flex flex-col items-center gap-1 relative"
+              >
+                   <h1 className="text-huge flex flex-wrap justify-center gap-x-5">
+                     <span className="text-white">PRECISION</span>
+                     <span className="outline-text">FOR</span>
+                   </h1>
+                   <h1 className="text-huge flex flex-wrap justify-center gap-x-5">
+                     <span className="text-white">ELITE</span>
+                     <span className="highlight-accent">
+                        <KineticText text="GROWTH." />
+                     </span>
+                   </h1>
+                   <div className="absolute inset-x-0 -bottom-6 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+              </motion.div>
+            </TiltContainer>
+
+            <div className="space-y-6">
+                <motion.p 
+                  variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                  className="text-white/40 text-[13px] font-medium max-w-2xl mx-auto leading-relaxed normal-case"
+                >
+                    An advanced ecosystem designed for modern career development. Synchronize your skills with industry-leading standards and optimize your professional narrative for institutional vetting.
+                </motion.p>
+                
+                <motion.div 
+                  variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                  className="text-xl md:text-3xl font-bold text-white tracking-tight leading-snug"
+                >
+                    Prepare with precision. <br />
+                    <span className="text-[#00B8D4]">Execute with confidence.</span>
+                </motion.div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 pt-6 relative">
+                {/* 🧲 High-Impact: Magnetic CTA Buttons */}
+                <MagneticButton>
+                  <Link href="/auth/signup" className="glow-button px-10 py-4 text-[10px] tracking-[0.2em]">
+                      INITIALIZE IDENTITY →
+                  </Link>
+                </MagneticButton>
+                
+                <MagneticButton>
+                  <Link href="/interviews" className="px-10 py-4 bg-white/[0.03] border border-white/10 rounded-full font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all">
+                      SYNC SIMULATION
+                  </Link>
+                </MagneticButton>
+            </div>
+
+            {/* 📊 Animated Stats - Minimalist Pills */}
+            <motion.div 
+               variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
+               className="flex flex-wrap items-center justify-center gap-3 py-16"
+            >
+                 {[
+                   { label: "Global Rank", val: "0.1", suffix: "%" },
+                   { label: "Data Points", val: "12.4", suffix: "M" },
+                   { label: "Role Surge", val: "24.1", suffix: "%" },
+                   { label: "Trajectories", val: "∞", suffix: "" }
+                 ].map((stat, i) => (
+                    <motion.div 
+                       key={i}
+                       variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
+                       className="px-5 py-2.5 bg-white/[0.03] border border-white/5 rounded-full flex items-center gap-3 hover:border-[#00B8D4]/30 transition-all cursor-default group"
+                    >
+                       <span className="text-[#00B8D4] text-[10px] font-bold group-hover:scale-110 transition-transform">
+                           {stat.val === "∞" ? "∞" : <CountUp value={stat.val} suffix={stat.suffix} />}
+                       </span>
+                       <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em]">{stat.label}</span>
+                    </motion.div>
+                 ))}
+            </motion.div>
+        </motion.div>
+
+        <div className="mt-auto w-full pb-10">
+             <LiveTicker data={[
+                "Role secured at Meta, Menlo Park — 4 mins ago",
+                "Resume optimized for Goldman Sachs — 12 mins ago",
+                "New skill gap detected: AWS Architecture — Syncing...",
+                "Institutional vetting complete for 12,402 nodes",
+                "Trajectory sync successful: +14% Market Value"
+             ]} />
+        </div>
+      </section>
+
+      {/* 📦 Features */}
+      <section className="py-52 px-8 relative z-10 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            { [
+              { title: "Identity Synthesis", desc: "Build a professional profile architecture designed for institutional vetting.", icon: ShieldCheck },
+              { title: "Practice Labs", desc: "Sharpen response patterns in a calibrated environment with real-time feedback.", icon: Mic },
+              { title: "Market Mesh", desc: "Access direct professional channels and bypass traditional administrative barriers.", icon: Globe }
+            ].map((feature, i) => (
+                <SpotlightCard 
+                   key={i}
+                   className="p-12 group hover:border-[#00B8D4]/20 transition-all duration-500"
+                >
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-10 text-white/40 group-hover:text-[#00B8D4] group-hover:bg-[#00B8D4]/10 group-hover:border-[#00B8D4]/20 transition-all shadow-sm">
+                      <feature.icon size={28} />
+                    </div>
+                    <h3 className="text-xl font-bold uppercase tracking-tight mb-5 text-white group-hover:text-[#00B8D4] transition-colors">{feature.title}</h3>
+                    <p className="text-[14px] text-white/30 leading-relaxed font-medium group-hover:text-white/50 transition-colors">{feature.desc}</p>
+                </SpotlightCard>
+            ))}
+        </div>
+      </section>
+
+      <motion.footer 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1.5 }}
+        className="py-24 border-t border-white/10 bg-black/80 relative z-10"
+      >
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 px-10">
+          <div className="flex items-center gap-6">
+             <SiteLogo className="w-8 h-8" />
+             <div className="text-[11px] font-bold tracking-widest text-white/20 uppercase">© 2026 HireFlow Enterprise :: Trajectories Re-Synchronized</div>
+          </div>
+          <div className="flex gap-20 text-[11px] font-bold tracking-widest text-white/20 uppercase">
+            <a href="#" className="hover:text-white transition-colors relative group">
+              Privacy
+              <span className="absolute -bottom-1 left-0 w-0 h-px bg-[#00B8D4] transition-all duration-300 group-hover:w-full" />
+            </a>
+            <a href="#" className="hover:text-white transition-colors relative group">
+              Terms
+              <span className="absolute -bottom-1 left-0 w-0 h-px bg-[#00B8D4] transition-all duration-300 group-hover:w-full" />
+            </a>
+          </div>
+        </div>
+      </motion.footer>
     </div>
   );
 }
