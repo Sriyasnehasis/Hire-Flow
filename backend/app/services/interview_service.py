@@ -391,7 +391,7 @@ class MockInterviewService:
             return None
         return session.questions[session.current_question_index]
     
-    def submit_answer(self, session_id: str, answer_audio_text: str) -> Dict:
+    async def submit_answer(self, session_id: str, answer_audio_text: str) -> Dict:
         """
         Submit answer (from audio transcription or text)
         Generate real-time feedback for candidate
@@ -422,7 +422,7 @@ class MockInterviewService:
         session.answers.append(answer_audio_text)
         
         # Generate real-time feedback
-        feedback = self._analyze_answer_realtime(current_question, answer_audio_text)
+        feedback = await self._analyze_answer_realtime(current_question, answer_audio_text)
         session.feedback_list.append(feedback)
         
         # Move to next question

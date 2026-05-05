@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.resume import Resume
 from app.services.resume_parser import ResumeParsing
 from app.services import ai_service
+from app.utils.pdf_gen import generate_pdf_resume
 from pydantic import BaseModel
 import json
 from datetime import datetime
@@ -261,19 +262,22 @@ async def get_resume(
     
     return {
         "id": resume.id,
+        "title": resume.title or resume.original_filename,
         "filename": resume.original_filename,
         "uploaded_at": resume.uploaded_at,
         "is_current": resume.is_current,
+        "summary": resume.summary,
         "parsed_data": {
             "skills": json.loads(resume.parsed_skills or '[]'),
             "education": json.loads(resume.parsed_education or '[]'),
-            "experience": json.loads(resume.parsed_experience or '[]')
+            "experience": json.loads(resume.parsed_experience or '[]'),
+            "projects": json.loads(resume.parsed_projects or '[]'),
+            "certifications": json.loads(resume.parsed_certifications or '[]')
         },
+        "ats_score": resume.ats_score,
+        "template": resume.template_id,
         "raw_text_preview": resume.raw_text[:500] if resume.raw_text else None
     }
-
-    # TODO: Implement resume detail fetch
-    return {}
 
 
 # ============================================================
@@ -724,11 +728,12 @@ async def export_resume(
             )
         
         elif format_type.lower() == 'pdf':
-            # For PDF, we'll return a message suggesting they use print-to-PDF
-            # or integrate a PDF library like reportlab or weasyprint
-            raise HTTPException(
-                status_code=501,
-                detail="PDF export is not implemented yet. Please use your browser's print-to-PDF feature or download as DOCX and convert."
+            # Generate PDF
+            pdf_content = generate_pdf_resume(resume)
+            return FileResponse(
+                io.BytesIO(pdf_content),
+                media_type="application/pdf",
+                filename=filename
             )
     
     except Exception as e:

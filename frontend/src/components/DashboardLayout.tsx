@@ -46,7 +46,12 @@ const navSections = [
   },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  title?: string;
+}
+
+export default function DashboardLayout({ children, title }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -62,10 +67,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const name = parsed?.full_name || parsed?.name || "User";
         setUserName(name);
         setUserEmail(parsed?.email || "candidate@hireflow.ai");
-        document.title = `HireFlow | Welcome, ${name.split(' ')[0]}`;
+        document.title = title ? `HireFlow | ${title}` : `HireFlow | Welcome, ${name.split(' ')[0]}`;
       }
     } catch {}
-  }, []);
+  }, [title]);
 
   const isActive = (href: string) => pathname === href;
 

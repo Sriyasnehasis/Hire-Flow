@@ -72,6 +72,7 @@ services:
       ADZUNA_API_KEY: ${ADZUNA_API_KEY}
       ADZUNA_APP_ID: ${ADZUNA_APP_ID}
       DEBUG: ${DEBUG:-True}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
@@ -106,25 +107,7 @@ services:
       - backend
     networks:
       - extractresume_network
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev
-
-  # Nginx Reverse Proxy (optional, for production-like setup)
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: extractresume_nginx
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #   depends_on:
-  #     - backend
-  #     - frontend
-  #   networks:
-  #     - extractresume_network
+    # Removed volume mounting for frontend to prevent overwriting the internal production build
 
 volumes:
   postgres_data:

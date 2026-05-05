@@ -2,7 +2,7 @@
 AI Service — powered by Google Gemini API.
 
 All AI features (ATS scoring, resume writing, cover letters, skill gap analysis)
-route through gemini-2.0-flash for fast, production-quality responses.
+route through gemini-flash-latest for fast, production-quality responses.
 Falls back to rule-based logic if the API key is missing.
 """
 
@@ -20,7 +20,7 @@ try:
     _api_key = os.getenv("GEMINI_API_KEY", "")
     if _api_key:
         genai.configure(api_key=_api_key)
-        _gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+        _gemini_model = genai.GenerativeModel("gemini-flash-latest")
         GEMINI_AVAILABLE = True
         logger.info("✅ Gemini API configured successfully")
     else:

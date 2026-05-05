@@ -70,8 +70,12 @@ export const TerminalLoader = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
-export const LiveTicker = () => {
-    const feed = [
+interface LiveTickerProps {
+  data?: string[];
+}
+
+export const LiveTicker = ({ data }: LiveTickerProps) => {
+    const defaultFeed = [
         "GLOBAL MARKET TRENDS: AI ENGINEERING ROLES UP 24.5%",
         "NEW TALENT NODE SECURED AT GOOGLE, MOUNTAIN VIEW",
         "PROFILE OPTIMIZATION LAYER: v4.2.0 DEPLOYED SUCCESSFULLY",
@@ -80,6 +84,8 @@ export const LiveTicker = () => {
         "MARKET ANALYSIS: PEER BENCHMARKING COMPLETE",
         "CAREER METRICS: TOP 0.1% GLOBAL RANKING ACCESSIBLE"
     ];
+
+    const feed = data || defaultFeed;
 
     return (
         <div className="w-full bg-black/40 backdrop-blur-3xl border-y border-white/5 py-3.5 overflow-hidden whitespace-nowrap">

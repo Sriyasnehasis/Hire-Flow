@@ -93,7 +93,7 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-16 py-12 pb-24 relative z-10">
         
-        {/* 🏔️ Crazy Dashboard Header - REVERTED */}
+        {/* Dashboard Header */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
           <div>
             <motion.div 
@@ -115,7 +115,7 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* 📊 Stats Grid */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {stats.map((stat, i) => (
             <motion.div
@@ -152,7 +152,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* 🧬 Main Features */}
+        {/* Main Features */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           <div className="lg:col-span-2 relative h-[450px] glass-card overflow-hidden group shine-card">
@@ -195,7 +195,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 🌀 Recommended Nodes */}
+        {/* Market Channels */}
         <div className="py-20">
           <div className="flex items-center justify-between mb-12 px-2">
             <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Market Channels</h2>
@@ -235,7 +235,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 📟 Neural Status Ticker - NEW */}
+        {/* Status Ticker */}
         <div className="fixed bottom-0 left-0 right-0 h-10 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50 flex items-center overflow-hidden">
           <div className="flex whitespace-nowrap animate-marquee px-4">
             {[...Array(10)].map((_, i) => (
@@ -244,13 +244,13 @@ export default function Dashboard() {
                   <Activity size={12} className="animate-pulse" /> Node_Status: Online
                 </span>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
-                  // Neural_Link: Encrypted
+                  {"// Neural_Link: Encrypted"}
                 </span>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#00FFB3]">
-                  // Talent_Mesh: Synchronized
+                  {"// Talent_Mesh: Synchronized"}
                 </span>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
-                  // Session_Auth: DEV_TOKEN
+                  {"// Session_Auth: DEV_TOKEN"}
                 </span>
               </div>
             ))}

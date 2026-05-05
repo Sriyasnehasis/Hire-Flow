@@ -155,7 +155,7 @@ async def respond_to_question(
         print(f"[INTERVIEW DEBUG] Submitting answer for session: {session_id}")
         print(f"[INTERVIEW DEBUG] Available sessions: {list(mock_interview_service.sessions.keys())}")
         
-        result = mock_interview_service.submit_answer(session_id, request.user_answer)
+        result = await mock_interview_service.submit_answer(session_id, request.user_answer)
         
         if result.get("interview_complete"):
             # Interview finished - get final report
@@ -223,7 +223,7 @@ async def submit_interview_answer(
         raise HTTPException(status_code=400, detail="Answer too short")
     
     try:
-        result = mock_interview_service.submit_answer(session_id, request.user_answer)
+        result = await mock_interview_service.submit_answer(session_id, request.user_answer)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
