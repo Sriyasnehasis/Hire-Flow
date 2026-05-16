@@ -79,7 +79,7 @@ export default function Dashboard() {
              <div className="md:col-span-2 glass-card p-8 flex items-center justify-between bg-accent text-bg-surface overflow-hidden relative">
                 <div className="relative z-10">
                    <h3 className="text-xl font-display font-black mb-2">Ready for your next move?</h3>
-                   <p className="text-bg-surface/80 text-sm max-w-sm mb-6">We've found 8 new roles that match your profile and current skill set.</p>
+                   <p className="text-bg-surface/80 text-sm max-w-sm mb-6">We&apos;ve found 8 new roles that match your profile and current skill set.</p>
                    <Link href="/jobs" className="px-6 py-2.5 bg-bg-surface text-accent rounded-full font-bold text-sm inline-flex items-center gap-2 hover:scale-105 transition-transform">
                       View Matches <ArrowUpRight size={16} />
                    </Link>

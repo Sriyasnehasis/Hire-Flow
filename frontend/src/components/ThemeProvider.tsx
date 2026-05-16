@@ -30,10 +30,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("hireflow-theme", newTheme);
   };
 
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}

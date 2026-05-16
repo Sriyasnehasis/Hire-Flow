@@ -44,7 +44,7 @@ const navSections = [
   },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children, title }: { children: React.ReactNode, title?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -54,9 +54,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const raw = localStorage.getItem("user");
     if (raw) {
       const parsed = JSON.parse(raw);
-      setUserName(parsed?.full_name?.split(" ")[0] || "Professional");
+      const name = parsed?.full_name?.split(" ")[0] || "Professional";
+      setUserName(name);
+      document.title = title ? `HireFlow | ${title}` : `HireFlow | Welcome, ${name}`;
     }
-  }, []);
+  }, [title]);
 
   const isActive = (href: string) => pathname === href;
 
