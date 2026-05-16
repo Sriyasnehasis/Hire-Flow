@@ -168,12 +168,12 @@ export default function DashboardLayout({ children, title }: { children: React.R
                  <Bell size={20} />
                  <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full border-2 border-bg-surface" />
               </button>
-              <div className="flex items-center gap-3 pl-6 border-l border-border">
-                 <div className="text-right hidden sm:block">
-                    <p className="text-[10px] font-black uppercase tracking-tighter text-text-muted">Node_Verified</p>
-                    <p className="text-xs font-bold">{userName}</p>
+              <div className="flex items-center gap-3 pl-6 border-l border-border ml-2">
+                 <div className="text-right hidden sm:flex flex-col justify-center">
+                    <p className="text-[9px] font-black uppercase tracking-tighter text-text-muted leading-none mb-1">Node_Verified</p>
+                    <p className="text-sm font-black leading-none">{userName}</p>
                  </div>
-                 <Link href="/profile" className="w-10 h-10 rounded-full bg-accent-soft border border-accent/20 flex items-center justify-center text-accent font-black">
+                 <Link href="/profile" className="w-10 h-10 rounded-full bg-accent text-bg-surface flex items-center justify-center font-black transition-transform hover:scale-110 shadow-sm">
                     {userName.charAt(0).toUpperCase()}
                  </Link>
               </div>

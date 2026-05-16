@@ -84,16 +84,16 @@ export default function InterviewsPage() {
         {/* 🔥 Kinetic Header - Semantic Color Update */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-12 border-b border-white/5">
           <div>
-            <div className="text-[#00E5FF] font-black text-[10px] tracking-[0.5em] uppercase mb-5 flex items-center gap-3">
+            <div className="text-accent font-black text-[10px] tracking-[0.5em] uppercase mb-5 flex items-center gap-3">
               <div className="flex gap-0.5 items-end h-3">
                 {[...Array(4)].map((_, i) => (
-                  <motion.div key={i} animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }} className="w-1 bg-[#00E5FF] rounded-full" />
+                  <motion.div key={i} animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }} className="w-1 bg-accent rounded-full" />
                 ))}
               </div>
               Neural Voice Labs
             </div>
-            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white">
-              Voice <span className="outline-text !text-transparent">Coach.</span>
+            <h1 className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter text-text">
+              Voice <span className="outline-text">Coach.</span>
             </h1>
           </div>
           {!interviewActive && (
@@ -101,10 +101,10 @@ export default function InterviewsPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleStartInterview}
-              className="px-8 py-3.5 bg-black border border-[#00E5FF]/40 rounded-xl flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-white hover:bg-[#00E5FF]/10 transition-all group"
+              className="px-8 py-3.5 bg-accent text-bg-surface rounded-xl flex items-center gap-3 text-[11px] font-black uppercase tracking-widest hover:filter hover:brightness-110 transition-all group shadow-lg"
             >
               Initialize Node 
-              <div className="w-6 h-6 rounded-lg bg-[#00E5FF]/10 flex items-center justify-center group-hover:bg-[#00E5FF] group-hover:text-black transition-colors">
+              <div className="w-6 h-6 rounded-lg bg-bg-surface/20 flex items-center justify-center group-hover:bg-bg-surface group-hover:text-accent transition-colors">
                 <Play size={10} fill="currentColor" />
               </div>
             </motion.button>
@@ -120,18 +120,18 @@ export default function InterviewsPage() {
               key="prep"
               className="grid grid-cols-1 lg:grid-cols-3 gap-10"
             >
-              <div className="lg:col-span-2 glass-card p-12 overflow-hidden bg-[#1c1410]/20 relative group border-[#FF5C1A]/10">
-                {/* Waveform Visualization Replacement for semicircle */}
-                <div className="absolute -top-10 -right-10 opacity-[0.03] rotate-12 pointer-events-none group-hover:opacity-[0.08] transition-opacity">
+              <div className="lg:col-span-2 glass-card p-12 overflow-hidden bg-bg-surface relative group border-border">
+                {/* Waveform Visualization */}
+                <div className="absolute -top-10 -right-10 opacity-[0.05] rotate-12 pointer-events-none group-hover:opacity-[0.1] transition-opacity text-accent">
                    <Volume2 size={300} strokeWidth={0.5} />
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-10 leading-none italic">
+                <h2 className="text-4xl md:text-5xl font-display font-black uppercase tracking-tighter mb-10 leading-none italic text-text">
                    Simulate the <br /> 
                    <motion.span 
                     animate={{ opacity: [1, 0.8, 1], x: [0, -1, 1, 0] }}
                     transition={{ repeat: Infinity, duration: 0.2, repeatDelay: 3 }}
-                    className="text-[#FF5C1A]"
+                    className="text-accent"
                    >
                      UNKNOWN.
                    </motion.span>
@@ -144,14 +144,14 @@ export default function InterviewsPage() {
                    ].map((item, i) => (
                      <div key={i} className="flex gap-8 items-start">
                        <div className="relative">
-                         <div className="absolute -inset-2 bg-[#FF5C1A]/10 rounded-full animate-pulse blur-md" />
-                         <div className="w-12 h-12 rounded-xl bg-[#FF5C1A]/5 border border-[#FF5C1A]/20 flex items-center justify-center text-[#FF5C1A] group-hover:rotate-3 transition-all relative z-10">
+                         <div className="absolute -inset-2 bg-accent/10 rounded-full animate-pulse blur-md" />
+                         <div className="w-12 h-12 rounded-xl bg-accent-soft border border-accent/20 flex items-center justify-center text-accent group-hover:rotate-3 transition-all relative z-10">
                            <item.i size={20} />
                          </div>
                        </div>
                        <div className="space-y-1.5">
-                         <h4 className="font-black text-white uppercase text-xs tracking-widest">{item.t}</h4>
-                         <p className="text-white/30 text-[13px] font-bold leading-relaxed">{item.d}</p>
+                         <h4 className="font-black text-text uppercase text-xs tracking-widest">{item.t}</h4>
+                         <p className="text-text-muted text-[13px] font-bold leading-relaxed">{item.d}</p>
                        </div>
                      </div>
                    ))}
@@ -161,7 +161,7 @@ export default function InterviewsPage() {
                   onClick={handleStartInterview}
                   disabled={loading}
                   whileHover="hover"
-                  className="relative px-12 py-5 bg-black border border-[#FF5C1A]/40 rounded-xl font-black text-xs uppercase tracking-[0.4em] text-white hover:bg-[#FF5C1A]/10 transition-all overflow-hidden flex items-center justify-center"
+                  className="relative px-12 py-5 bg-accent text-bg-surface rounded-xl font-black text-xs uppercase tracking-[0.4em] hover:filter hover:brightness-110 transition-all overflow-hidden flex items-center justify-center shadow-xl"
                 >
                   <motion.div 
                     variants={{ hover: { opacity: 1, x: 0 } }}
@@ -169,7 +169,7 @@ export default function InterviewsPage() {
                     className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 pointer-events-none"
                   >
                     {[...Array(12)].map((_, i) => (
-                      <motion.div key={i} animate={{ height: [4, 16, 4] }} transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.05 }} className="w-1 bg-[#FF5C1A]/20" />
+                      <motion.div key={i} animate={{ height: [4, 16, 4] }} transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.05 }} className="w-1 bg-bg-surface/30" />
                     ))}
                   </motion.div>
                   <span className="relative z-10">{loading ? "Synching..." : "Launch Full Simulation"}</span>
@@ -178,8 +178,8 @@ export default function InterviewsPage() {
 
               {/* History Nodes - Staggered Animations */}
               <div className="space-y-6">
-                <div className="glass-card p-8 bg-white/[0.02]">
-                  <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mb-10">Recent Logs</h3>
+                <div className="glass-card p-8 bg-bg-surface border-border">
+                  <h3 className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] mb-10">Recent Logs</h3>
                   <div className="space-y-4">
                     {[65, 88, 42].map((s, i) => (
                       <motion.div 
@@ -187,11 +187,11 @@ export default function InterviewsPage() {
                         initial={{ opacity: 0, x: 40 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className={`flex items-center justify-between p-5 bg-white/[0.02] border-l-2 rounded-xl group hover:bg-white/[0.04] transition-all
-                          ${s > 80 ? 'border-l-[#00FFB3]/40' : s > 60 ? 'border-l-[#FFB300]/40' : 'border-l-[#FF4D4D]/40'}`}
+                        className={`flex items-center justify-between p-5 bg-bg-raised border-l-2 rounded-xl group hover:bg-bg-raised/80 transition-all
+                          ${s > 80 ? 'border-l-[#1A5C4B]' : s > 60 ? 'border-l-[#C25A1A]' : 'border-l-red-500'}`}
                       >
-                        <div className="text-[10px] font-bold text-white/40 tracking-widest">LOG_NODE_{i+102}</div>
-                        <div className={`font-black text-xl tracking-tighter ${s > 80 ? 'text-[#00FFB3]' : s > 60 ? 'text-[#FFB300]' : 'text-[#FF4D4D]'}`}>{s}%</div>
+                        <div className="text-[10px] font-bold text-text-muted tracking-widest">LOG_NODE_{i+102}</div>
+                        <div className={`font-black text-xl tracking-tighter ${s > 80 ? 'text-[#1A5C4B]' : s > 60 ? 'text-[#C25A1A]' : 'text-red-500'}`}>{s}%</div>
                       </motion.div>
                     ))}
                   </div>
@@ -208,39 +208,39 @@ export default function InterviewsPage() {
             >
               <div className="flex items-center justify-between mb-12 px-4">
                 <div className="flex items-center gap-4">
-                   <div className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF] animate-pulse" />
-                   <div className="text-[9px] font-black uppercase tracking-[0.4em] text-white/30">Neural Link Stable</div>
+                   <div className="w-2 h-2 rounded-full bg-accent shadow-[0_0_10px_var(--accent)] animate-pulse" />
+                   <div className="text-[9px] font-black uppercase tracking-[0.4em] text-text-muted">Neural Link Stable</div>
                 </div>
-                <div className="h-px flex-1 mx-10 bg-white/5" />
-                <div className="text-[10px] font-black text-[#FF5C1A] uppercase tracking-[0.3em]">Question #01</div>
+                <div className="h-px flex-1 mx-10 bg-border" />
+                <div className="text-[10px] font-black text-accent uppercase tracking-[0.3em]">Question #01</div>
               </div>
 
-              <div className="glass-card bg-[#1c1410]/40 p-16 md:p-24 text-center mb-12 border-[#FF5C1A]/20 group overflow-hidden relative shadow-[0_0_80px_rgba(255,92,26,0.05)]">
+              <div className="glass-card bg-bg-raised p-16 md:p-24 text-center mb-12 border-accent/20 group overflow-hidden relative shadow-[0_0_80px_rgba(var(--accent-rgb),0.05)]">
                 {/* Hero Audio Waveform (Animated Background) */}
-                <div className="absolute inset-0 flex items-center justify-center gap-1.5 opacity-[0.03] pointer-events-none">
+                <div className="absolute inset-0 flex items-center justify-center gap-1.5 opacity-[0.05] pointer-events-none">
                   {[...Array(60)].map((_, i) => (
                     <motion.div 
                       key={i} 
                       animate={{ height: isRecording ? [20, 120, 20] : [20, 50, 20] }} 
                       transition={{ repeat: Infinity, duration: isRecording ? 0.3 : 2, delay: i * 0.01 }} 
-                      className="w-1 bg-[#FF5C1A] rounded-full" 
+                      className="w-1 bg-accent rounded-full" 
                     />
                   ))}
                 </div>
 
                 {/* Tactical Overlays */}
-                <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5C1A]/50 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5C1A]/20 to-transparent" />
+                <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
                 
                 <div className="space-y-6 relative z-10">
-                  <div className="text-[#FF5C1A] font-black text-[9px] tracking-[0.4em] uppercase opacity-60">
+                  <div className="text-accent font-black text-[9px] tracking-[0.4em] uppercase opacity-60">
                     Incoming Transmission // {currentQuestion?.difficulty || 'Standard'}
                   </div>
                   <motion.h2 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     key={currentQuestion?.question_text}
-                    className="text-2xl md:text-5xl font-black text-white leading-[1.1] uppercase tracking-tighter"
+                    className="text-2xl md:text-5xl font-display font-black text-text leading-[1.1] uppercase tracking-tighter"
                   >
                     {currentQuestion?.question_text || "Initializing Interview Node..."}
                   </motion.h2>
@@ -251,10 +251,10 @@ export default function InterviewsPage() {
                 <motion.div 
                    initial={{ opacity: 0, x: -20 }}
                    animate={{ opacity: 1, x: 0 }}
-                   className="mb-12 p-8 bg-[#FF5C1A]/5 border-l-4 border-[#FF5C1A] rounded-xl flex gap-6 items-start"
+                   className="mb-12 p-8 bg-accent-soft border-l-4 border-accent rounded-xl flex gap-6 items-start"
                 >
-                   <Sparkles className="text-[#FF5C1A] flex-shrink-0" size={24} />
-                   <p className="text-[13px] font-bold text-[#FF5C1A]/80 leading-relaxed tracking-tight">{feedback}</p>
+                   <Sparkles className="text-accent flex-shrink-0" size={24} />
+                   <p className="text-[13px] font-bold text-text leading-relaxed tracking-tight">{feedback}</p>
                 </motion.div>
               )}
 
@@ -267,7 +267,7 @@ export default function InterviewsPage() {
                         animate={{ scale: 1.4, opacity: 0.3 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ repeat: Infinity, duration: 1.5 }}
-                        className="absolute -inset-8 bg-[#FF5C1A] rounded-full blur-2xl pointer-events-none" 
+                        className="absolute -inset-8 bg-accent rounded-full blur-2xl pointer-events-none" 
                       />
                     )}
                   </AnimatePresence>
@@ -281,8 +281,8 @@ export default function InterviewsPage() {
                     disabled={loading}
                     className={`w-32 h-32 rounded-full flex flex-col items-center justify-center transition-all duration-700 shadow-2xl relative z-10 border-2 ${
                       isRecording 
-                        ? 'bg-[#FF5C1A] text-white border-white/20 shadow-[0_0_80px_rgba(255,92,26,0.5)]' 
-                        : 'bg-black text-[#FF5C1A] border-[#FF5C1A]/20 hover:border-[#FF5C1A]/60'
+                        ? 'bg-accent text-bg-surface border-bg-surface/20 shadow-[0_0_80px_var(--accent)]' 
+                        : 'bg-bg-surface text-accent border-accent/20 hover:border-accent/60'
                     }`}
                   >
                     {isRecording ? (
@@ -297,7 +297,7 @@ export default function InterviewsPage() {
                 </div>
 
                 <div className="text-center space-y-5">
-                  <p className="text-[9px] font-black uppercase tracking-[0.5em] text-white/20">
+                  <p className="text-[9px] font-black uppercase tracking-[0.5em] text-text-muted">
                     {isRecording ? "Neural Stream Incoming" : "Standby for Signal"}
                   </p>
                   
@@ -308,7 +308,7 @@ export default function InterviewsPage() {
                           key={i}
                           animate={{ height: [4, 20, 4] }}
                           transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.03 }}
-                          className="w-1 bg-[#FF5C1A] rounded-full"
+                          className="w-1 bg-accent rounded-full"
                         />
                       ))}
                     </div>
@@ -316,25 +316,25 @@ export default function InterviewsPage() {
                 </div>
 
                 {!isRecording && (
-                  <button onClick={() => setInterviewActive(false)} className="text-[10px] font-black uppercase tracking-[0.4em] text-white/10 hover:text-white/40 transition-colors pt-12">
+                  <button onClick={() => setInterviewActive(false)} className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted/20 hover:text-text-muted transition-colors pt-12">
                     Terminate Link :: Exit
                   </button>
                 )}
               </div>
 
-              {/* Real-time Oscilloscope Grid - Semantic Color Update */}
+              {/* Real-time Oscilloscope Grid */}
               <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-10">
                  {[
-                   { m: 'Linguistic Depth', val: 72, color: '#00E5FF' },
-                   { m: 'Cognitive Load', val: 45, color: '#FFB300' },
-                   { m: 'Emotional Resonance', val: 89, color: '#00FFB3' }
+                   { m: 'Linguistic Depth', val: 72, color: 'var(--accent)' },
+                   { m: 'Cognitive Load', val: 45, color: '#C25A1A' },
+                   { m: 'Emotional Resonance', val: 89, color: '#1A5C4B' }
                  ].map((metric) => (
                    <div key={metric.m} className="space-y-4">
                      <div className="flex justify-between items-end">
-                       <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{metric.m}</span>
+                       <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{metric.m}</span>
                        <span className="text-[10px] font-black uppercase italic" style={{ color: metric.color }}>{metric.val}%MATCH</span>
                      </div>
-                     <div className="h-0.5 w-full bg-white/5 relative overflow-hidden">
+                     <div className="h-0.5 w-full bg-border relative overflow-hidden">
                         <motion.div 
                            initial={{ width: 0 }}
                            animate={{ width: `${metric.val}%` }}
