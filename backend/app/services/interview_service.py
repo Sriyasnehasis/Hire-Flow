@@ -19,6 +19,10 @@ class InterviewRole(str, Enum):
     DATA_SCIENTIST = "Data Scientist"
     PRODUCT_MANAGER = "Product Manager"
     FULLSTACK_ENGINEER = "Full Stack Engineer"
+    SALES_EXECUTIVE = "Sales Executive"
+    MARKETING_SPECIALIST = "Marketing Specialist"
+    CUSTOMER_SUPPORT = "Customer Support Specialist"
+    HR_SPECIALIST = "HR Specialist"
 
 class InterviewQuestion(BaseModel):
     id: str
@@ -347,7 +351,7 @@ class MockInterviewService:
                     category="technical",
                     expected_keywords=["CI/CD", "deployment", "rollback", "monitoring", "testing", "documentation", "downtime"]
                 ),
-                InterviewQuestion(
+                 InterviewQuestion(
                     id=str(uuid.uuid4()),
                     question_text="How do you optimize performance in full-stack applications? Frontend and backend?",
                     role=InterviewRole.FULLSTACK_ENGINEER,
@@ -355,6 +359,78 @@ class MockInterviewService:
                     category="technical",
                     expected_keywords=["optimization", "caching", "compression", "lazy loading", "database queries", "async"]
                 ),
+            ],
+            InterviewRole.SALES_EXECUTIVE: [
+                InterviewQuestion(
+                    id=str(uuid.uuid4()),
+                    question_text="How do you handle rejection in a sales pipeline, and what techniques do you use to overcome objections?",
+                    role=InterviewRole.SALES_EXECUTIVE,
+                    difficulty="medium",
+                    category="behavioral",
+                    expected_keywords=["objections", "relationship building", "active listening", "follow-up", "resilience"]
+                ),
+                InterviewQuestion(
+                    id=str(uuid.uuid4()),
+                    question_text="Walk me through your process for qualifying a prospect and closing a high-value enterprise deal.",
+                    role=InterviewRole.SALES_EXECUTIVE,
+                    difficulty="hard",
+                    category="technical",
+                    expected_keywords=["enterprise sales", "prospecting", "deal closing", "negotiation", "contracting"]
+                )
+            ],
+            InterviewRole.MARKETING_SPECIALIST: [
+                InterviewQuestion(
+                    id=str(uuid.uuid4()),
+                    question_text="Describe a successful marketing campaign you led. What metrics did you track to define success?",
+                    role=InterviewRole.MARKETING_SPECIALIST,
+                    difficulty="medium",
+                    category="behavioral",
+                    expected_keywords=["campaign", "metrics", "analytics", "ROI", "conversion rate", "SEO", "PPC"]
+                ),
+                InterviewQuestion(
+                    id=str(uuid.uuid4()),
+                    question_text="How would you optimize user acquisition cost and calculate return on ad spend (ROAS) across multiple channels?",
+                    role=InterviewRole.MARKETING_SPECIALIST,
+                    difficulty="hard",
+                    category="technical",
+                    expected_keywords=["CAC", "ROAS", "channels", "attribution", "budgeting", "A/B testing"]
+                )
+            ],
+            InterviewRole.CUSTOMER_SUPPORT: [
+                InterviewQuestion(
+                    id=str(uuid.uuid4()),
+                    question_text="How do you handle an extremely angry customer who is demanding an immediate refund for a service failure?",
+                    role=InterviewRole.CUSTOMER_SUPPORT,
+                    difficulty="medium",
+                    category="behavioral",
+                    expected_keywords=["de-escalate", "empathy", "active listening", "solution", "company policy"]
+                ),
+                InterviewQuestion(
+                    id=str(uuid.uuid4()),
+                    question_text="How do you balance ticket resolution speed with maintaining high customer satisfaction (CSAT) scores?",
+                    role=InterviewRole.CUSTOMER_SUPPORT,
+                    difficulty="medium",
+                    category="technical",
+                    expected_keywords=["CSAT", "SLA", "prioritization", "efficiency", "first response time", "quality"]
+                )
+            ],
+            InterviewRole.HR_SPECIALIST: [
+                InterviewQuestion(
+                    id=str(uuid.uuid4()),
+                    question_text="How do you manage conflict between a manager and their direct report while remaining neutral?",
+                    role=InterviewRole.HR_SPECIALIST,
+                    difficulty="medium",
+                    category="behavioral",
+                    expected_keywords=["conflict resolution", "neutrality", "mediation", "employment law", "documentation"]
+                ),
+                InterviewQuestion(
+                    id=str(uuid.uuid4()),
+                    question_text="What metrics do you look at to evaluate recruitment funnel efficiency and employee retention rates?",
+                    role=InterviewRole.HR_SPECIALIST,
+                    difficulty="hard",
+                    category="technical",
+                    expected_keywords=["retention", "recruitment funnel", "turnover rate", "time-to-hire", "onboarding success"]
+                )
             ],
         }
     

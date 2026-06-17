@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const logs = [
-  "Initializing Career Intelligence Engine...",
-  "Loading Profile Synthesis modules...",
-  "Verifying Voice Diagnostics security...",
-  "Synchronizing Market Mesh nodes...",
-  "Accessing Global Intelligence Layer...",
+  "Initializing Career Assistant...",
+  "Loading Profile Builder...",
+  "Verifying Audio Setup...",
+  "Connecting to Job Feeds...",
+  "Accessing Recommendations...",
   "Connection Established.",
   "Ready for Analysis."
 ];
@@ -76,13 +76,13 @@ interface LiveTickerProps {
 
 export const LiveTicker = ({ data }: LiveTickerProps) => {
     const defaultFeed = [
-        "GLOBAL MARKET TRENDS: AI ENGINEERING ROLES UP 24.5%",
-        "NEW TALENT NODE SECURED AT GOOGLE, MOUNTAIN VIEW",
-        "PROFILE OPTIMIZATION LAYER: v4.2.0 DEPLOYED SUCCESSFULLY",
-        "ENTERPRISE ACCESS: 2.1K ACTIVE PROFESSIONAL NODES DETECTED",
-        "PRACTICE LABS: 98.4% PEAK PERFORMANCE RATING ACHIEVED",
-        "MARKET ANALYSIS: PEER BENCHMARKING COMPLETE",
-        "CAREER METRICS: TOP 0.1% GLOBAL RANKING ACCESSIBLE"
+        "Tip: Highlight key metrics and results in your work experience.",
+        "Tip: Tailor your resume summary to match the job description.",
+        "Tip: Practice interview questions under simulated timing constraints.",
+        "Tip: Include technical skills and soft skills in separate sections.",
+        "Tip: Use the STAR method to structure your behavioral answers.",
+        "Tip: Follow up with recruiters 3-5 days after applying.",
+        "Tip: Keep your resume to one page if under 5 years of experience."
     ];
 
     const feed = data || defaultFeed;

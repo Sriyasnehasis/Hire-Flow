@@ -11,6 +11,8 @@ from app.core.db import get_db
 from app.core.security import security_service
 from app.models.hr_contact import HRContact, EmailTemplate, EmailLog
 from app.services.email_service import email_service
+from app.models.user import User
+from app.services.ai_service import generate_outreach_email
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/hr-contacts", tags=["HR Contacts & Email"])
@@ -231,6 +233,53 @@ async def delete_hr_contact(
         "status": "deleted",
         "message": f"Deleted contact: {contact.first_name} {contact.last_name}"
     }
+
+@router.post("/{contact_id}/outreach-draft")
+async def generate_contact_outreach_draft(
+    contact_id: int,
+    current_user_id: int = Depends(security_service.get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate an AI-powered outreach email draft for a contact.
+    Uses user profile, resume text, and past successful email style preferences.
+    """
+    contact = db.query(HRContact).filter(
+        HRContact.id == contact_id,
+        HRContact.user_id == current_user_id
+    ).first()
+    
+    if not contact:
+        raise HTTPException(status_code=404, detail="HR Contact not found")
+        
+    user = db.query(User).filter(User.id == current_user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Gather up to 3 previously sent emails for style preference / few-shot learning
+    past_emails = db.query(EmailLog).filter(
+        EmailLog.user_id == current_user_id,
+        EmailLog.status == "sent"
+    ).order_by(EmailLog.created_at.desc()).limit(3).all()
+    
+    past_examples = [
+        {"subject": email.subject, "body": email.body}
+        for email in past_emails
+    ]
+    
+    draft = await generate_outreach_email(
+        user_name=user.full_name or "Job Seeker",
+        user_profession=user.headline or "Professional",
+        user_skills=user.primary_skills or [],
+        user_resume_snippet=user.resume_text or "",
+        contact_name=f"{contact.first_name} {contact.last_name}",
+        contact_company=contact.company_name,
+        contact_title=contact.job_title or "Hiring Coordinator",
+        past_examples=past_examples
+    )
+    
+    return draft
+
 
 # ============ EMAIL TEMPLATE ENDPOINTS ============
 

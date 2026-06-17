@@ -51,14 +51,17 @@ export default function DashboardLayout({ children, title }: { children: React.R
   const [userName, setUserName] = useState("Professional");
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const raw = localStorage.getItem("user");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const name = parsed?.full_name?.split(" ")[0] || "Professional";
-      setUserName(name);
-      document.title = title ? `HireFlow | ${title}` : `HireFlow | Welcome, ${name}`;
+    if (!token || !raw) {
+      router.push("/auth/login");
+      return;
     }
-  }, [title]);
+    const parsed = JSON.parse(raw);
+    const name = parsed?.full_name?.split(" ")[0] || "Professional";
+    setUserName(name);
+    document.title = title ? `HireFlow | ${title}` : `HireFlow | Welcome, ${name}`;
+  }, [title, router]);
 
   const isActive = (href: string) => pathname === href;
 

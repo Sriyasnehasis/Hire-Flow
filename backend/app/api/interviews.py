@@ -40,6 +40,10 @@ async def get_available_roles():
         {"id": "data_scientist", "label": "Data Scientist"},
         {"id": "product_manager", "label": "Product Manager"},
         {"id": "fullstack", "label": "Fullstack Developer"},
+        {"id": "sales_executive", "label": "Sales Executive"},
+        {"id": "marketing_specialist", "label": "Marketing Specialist"},
+        {"id": "customer_support", "label": "Customer Support Specialist"},
+        {"id": "hr_specialist", "label": "HR Specialist"},
     ]
     return {
         "roles": roles,
@@ -74,6 +78,10 @@ async def start_interview(
         "data_scientist": InterviewRole.DATA_SCIENTIST,
         "product_manager": InterviewRole.PRODUCT_MANAGER,
         "fullstack": InterviewRole.FULLSTACK_ENGINEER,
+        "sales_executive": InterviewRole.SALES_EXECUTIVE,
+        "marketing_specialist": InterviewRole.MARKETING_SPECIALIST,
+        "customer_support": InterviewRole.CUSTOMER_SUPPORT,
+        "hr_specialist": InterviewRole.HR_SPECIALIST,
     }
     
     if request.role not in role_mapping:

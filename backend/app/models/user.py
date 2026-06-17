@@ -30,22 +30,19 @@ class User(Base):
     github_url = Column(String, nullable=True)
 
     # GitHub OAuth fields (used by existing GitHub login flow)
-    # TEMPORARILY COMMENTED OUT DUE TO SQLALCHEMY METADATA ISSUE
-    # These columns physically exist in the database but SQLAlchemy can't see them
-    # Will be re-enabled after fixing the ORM metadata cache issue
-    # github_id = Column(String, unique=True, index=True, nullable=True)
-    # github_username = Column(String, nullable=True)
-    # github_access_token = Column(String, nullable=True)
-    # github_refresh_token = Column(String, nullable=True)
-    # 
-    # # GitHub stats & data
-    # github_stars_total = Column(Integer, default=0)
-    # github_repos_count = Column(Integer, default=0)
-    # github_languages = Column(JSON, nullable=False, default=list)
-    # github_bio = Column(Text, nullable=True)
-    # github_avatar_url = Column(String, nullable=True)
-    # github_profile_url = Column(String, nullable=True)
-    # github_last_synced = Column(DateTime(timezone=True), nullable=True)
+    github_id = Column(String, unique=True, index=True, nullable=True)
+    github_username = Column(String, nullable=True)
+    github_access_token = Column(String, nullable=True)
+    github_refresh_token = Column(String, nullable=True)
+    
+    # GitHub stats & data
+    github_stars_total = Column(Integer, default=0)
+    github_repos_count = Column(Integer, default=0)
+    github_languages = Column(JSON, nullable=False, default=list)
+    github_bio = Column(Text, nullable=True)
+    github_avatar_url = Column(String, nullable=True)
+    github_profile_url = Column(String, nullable=True)
+    github_last_synced = Column(DateTime(timezone=True), nullable=True)
     
     # Legacy field for backward compatibility
     username = Column(String, nullable=True)

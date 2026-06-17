@@ -111,7 +111,7 @@ export default function Home() {
               variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
               className="text-slate-500 text-[9px] font-bold tracking-[0.4em] uppercase"
             >
-                Neural Career OS for Elite Professionals
+                AI-Powered Career Companion for Job Seekers
             </motion.div>
 
             {/* 🏔️ High-Impact: 3D Tilt Headline Container */}
@@ -121,13 +121,13 @@ export default function Home() {
                 className="flex flex-col items-center gap-1 relative"
               >
                    <h1 className="text-huge flex flex-wrap justify-center gap-x-5">
-                     <span className="text-white">PRECISION</span>
-                     <span className="outline-text">FOR</span>
+                     <span className="text-white">PREPARE</span>
+                     <span className="outline-text">WITH</span>
                    </h1>
                    <h1 className="text-huge flex flex-wrap justify-center gap-x-5">
-                     <span className="text-white">ELITE</span>
+                     <span className="text-white">REAL</span>
                      <span className="highlight-accent">
-                        <KineticText text="GROWTH." />
+                        <KineticText text="CONFIDENCE." />
                      </span>
                    </h1>
                    <div className="absolute inset-x-0 -bottom-6 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
@@ -139,15 +139,15 @@ export default function Home() {
                   variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
                   className="text-white/40 text-[13px] font-medium max-w-2xl mx-auto leading-relaxed normal-case"
                 >
-                    An advanced ecosystem designed for modern career development. Synchronize your skills with industry-leading standards and optimize your professional narrative for institutional vetting.
+                    An all-in-one career platform designed to guide you through every step of your job hunt. Build ATS-optimized resumes, practice realistic mock interviews, and organize your applications seamlessly.
                 </motion.p>
                 
                 <motion.div 
                   variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
                   className="text-xl md:text-3xl font-bold text-white tracking-tight leading-snug"
                 >
-                    Prepare with precision. <br />
-                    <span className="text-[#00B8D4]">Execute with confidence.</span>
+                    Prepare with guidance. <br />
+                    <span className="text-[#00B8D4]">Apply with confidence.</span>
                 </motion.div>
             </div>
 
@@ -155,13 +155,13 @@ export default function Home() {
                 {/* 🧲 High-Impact: Magnetic CTA Buttons */}
                 <MagneticButton>
                   <Link href="/auth/signup" className="glow-button px-10 py-4 text-[10px] tracking-[0.2em]">
-                      INITIALIZE IDENTITY →
+                      GET STARTED NOW →
                   </Link>
                 </MagneticButton>
                 
                 <MagneticButton>
                   <Link href="/interviews" className="px-10 py-4 bg-white/[0.03] border border-white/10 rounded-full font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all">
-                      SYNC SIMULATION
+                      PRACTICE MOCK INTERVIEW
                   </Link>
                 </MagneticButton>
             </div>
@@ -172,10 +172,10 @@ export default function Home() {
                className="flex flex-wrap items-center justify-center gap-3 py-16"
             >
                  {[
-                   { label: "Global Rank", val: "0.1", suffix: "%" },
-                   { label: "Data Points", val: "12.4", suffix: "M" },
-                   { label: "Role Surge", val: "24.1", suffix: "%" },
-                   { label: "Trajectories", val: "∞", suffix: "" }
+                   { label: "Avg ATS Match", val: "85", suffix: "%" },
+                   { label: "Jobs Aggregated", val: "10", suffix: "K+" },
+                   { label: "Confidence Boost", val: "95", suffix: "%" },
+                   { label: "Mock Interviews", val: "500", suffix: "+" }
                  ].map((stat, i) => (
                     <motion.div 
                        key={i}
@@ -193,11 +193,11 @@ export default function Home() {
 
         <div className="mt-auto w-full pb-10">
              <LiveTicker data={[
-                "Role secured at Meta, Menlo Park — 4 mins ago",
-                "Resume optimized for Goldman Sachs — 12 mins ago",
-                "New skill gap detected: AWS Architecture — Syncing...",
-                "Institutional vetting complete for 12,402 nodes",
-                "Trajectory sync successful: +14% Market Value"
+                "Tip: Customize your resume summary for each individual job description to rank higher.",
+                "Tip: Use strong action verbs in your bullet points (e.g. Led, Designed, Optimized).",
+                "Tip: Quantify your results on your resume (e.g., 'Improved load times by 24%').",
+                "Tip: Practice mock interviews under simulated constraints to boost your spoken confidence.",
+                "Tip: Keep your resume to a clean 1-page layout if you have less than 5 years of experience."
              ]} />
         </div>
       </section>
@@ -206,14 +206,14 @@ export default function Home() {
       <section className="py-52 px-8 relative z-10 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             { [
-              { title: "Identity Synthesis", desc: "Build a professional profile architecture designed for institutional vetting.", icon: ShieldCheck },
-              { title: "Practice Labs", desc: "Sharpen response patterns in a calibrated environment with real-time feedback.", icon: Mic },
-              { title: "Market Mesh", desc: "Access direct professional channels and bypass traditional administrative barriers.", icon: Globe }
+              { title: "AI Resume Builder", desc: "Build customized, ATS-friendly resumes using professional modern templates.", icon: ShieldCheck },
+              { title: "Interview Coach", desc: "Practice technical and behavioral mock interviews with live transcription and real-time feedback.", icon: Mic },
+              { title: "Outreach CRM", desc: "Track your job applications and auto-generate personalized email drafts for recruiters.", icon: Globe }
             ].map((feature, i) => (
                 <SpotlightCard 
                    key={i}
                    className="p-12 group hover:border-[#00B8D4]/20 transition-all duration-500"
-                >
+                 >
                     <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-10 text-white/40 group-hover:text-[#00B8D4] group-hover:bg-[#00B8D4]/10 group-hover:border-[#00B8D4]/20 transition-all shadow-sm">
                       <feature.icon size={28} />
                     </div>
@@ -234,7 +234,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 px-10">
           <div className="flex items-center gap-6">
              <SiteLogo className="w-8 h-8" />
-             <div className="text-[11px] font-bold tracking-widest text-white/20 uppercase">© 2026 HireFlow Enterprise :: Trajectories Re-Synchronized</div>
+             <div className="text-[11px] font-bold tracking-widest text-white/20 uppercase">© 2026 HireFlow — Empowering Your Career Journey</div>
           </div>
           <div className="flex gap-20 text-[11px] font-bold tracking-widest text-white/20 uppercase">
             <a href="#" className="hover:text-white transition-colors relative group">

@@ -61,7 +61,7 @@ export default function LoginPage() {
       {/* 🧬 Branding */}
       <div className="absolute top-8 flex flex-col items-center z-20">
         <SiteLogo className="w-12 h-12 animate-float" />
-        <span className="mt-3 text-[9px] font-black tracking-[0.6em] text-white/20 uppercase">Secure Node</span>
+        <span className="mt-3 text-[9px] font-black tracking-[0.6em] text-white/20 uppercase">Secure Portal</span>
       </div>
 
       <motion.div
@@ -70,8 +70,8 @@ export default function LoginPage() {
         className="w-full max-w-[380px] bg-black/40 backdrop-blur-3xl p-8 lg:p-10 rounded-[2.5rem] border border-white/5 relative z-10 shadow-2xl"
       >
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-black uppercase tracking-tighter text-white mb-1">Access Space</h1>
-          <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.4em]">Initialize Neural Connection</p>
+          <h1 className="text-2xl font-black uppercase tracking-tighter text-white mb-1">Sign In</h1>
+          <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.4em]">Welcome Back to HireFlow</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -104,14 +104,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-white text-black py-4 rounded-xl font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-cyan-400 hover:text-white hover:shadow-[0_15px_30px_rgba(0,229,255,0.3)] hover:scale-[1.02] transition-all group mt-6"
           >
-            {loading ? "Syncing..." : "Connect Node"}
+            {loading ? "Signing In..." : "Sign In"}
             {!loading && <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />}
           </button>
         </form>
 
         <div className="mt-8 text-center space-y-4">
           <p className="text-[10px] font-bold text-white/30 tracking-tight">
-            New trajectory? <Link href="/auth/signup" className="text-white hover:text-cyan-400 font-black transition-colors">Start identity initialization</Link>
+            New here? <Link href="/auth/signup" className="text-white hover:text-cyan-400 font-black transition-colors">Create your free account</Link>
           </p>
         </div>
       </motion.div>

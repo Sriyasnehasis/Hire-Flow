@@ -741,3 +741,152 @@ async def export_resume(
             status_code=500,
             detail=f"Error exporting resume: {str(e)}"
         )
+
+
+class ResumeSynthesizeRequest(BaseModel):
+    target_job: str
+    template: str = "professional"  # modern, professional, creative, minimal
+    enrich_github: bool = True
+
+
+@router.post("/synthesize-ai")
+async def synthesize_resume_ai(
+    request: ResumeSynthesizeRequest,
+    current_user_id: int = Depends(security_service.get_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """
+    Synthesizes a complete resume using Gemini AI:
+    1. Fetches user details (LinkedIn bio, name, profession, qualifications)
+    2. Optional: Fetches top GitHub repositories & languages
+    3. Calls Gemini to generate ATS-optimized summary, skills, experience bullets, and projects list
+    4. Creates and stores a new Resume node in the database
+    """
+    from app.services.github_service import GitHubDataService
+    
+    user = db.query(User).filter(User.id == current_user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Prepare educational & experience details from profile
+    education = []
+    if user.educational_qualification:
+        education.append({
+            "school": "University Node",
+            "degree": user.educational_qualification,
+            "field_of_study": "Software Engineering/Science",
+            "start_date": "2022",
+            "end_date": "2026"
+        })
+        
+    experience = []
+    if user.current_company or user.profession:
+        experience.append({
+            "company": user.current_company or "Enterprise Network",
+            "position": user.profession or "Tech Professional",
+            "start_date": "2025",
+            "end_date": "Present",
+            "is_current": True,
+            "description": user.bio or "Responsible for developing systems."
+        })
+
+    # Pull GitHub repositories if requested and connected
+    github_projects = []
+    if request.enrich_github and user.github_username and user.github_access_token:
+        try:
+            github_projects = await GitHubDataService.get_github_projects(user)
+        except Exception as e:
+            print(f"Error fetching GitHub projects for synthesis: {e}")
+
+    # Combine into a prompt for Gemini content generation
+    prompt = f"""You are a professional ATS resume writer. Generate an optimized resume dataset for:
+Full Name: {user.full_name or "Professional"}
+Target Job: {request.target_job}
+LinkedIn Bio: {user.bio or ""}
+Experience: {user.profession or ""} at {user.current_company or "None"}
+Skills: {', '.join(user.primary_skills or [])}
+
+GITHUB PROJECTS FOR INCORPORATION (if any):
+{json.dumps(github_projects[:3], indent=2)}
+
+Return a JSON object with these fields:
+{{
+  "professional_summary": "<compelling 3-sentence summary>",
+  "skills": ["skill1", "skill2", "skill3", ...],
+  "experience": [
+    {{
+      "company": "...",
+      "position": "...",
+      "start_date": "...",
+      "end_date": "...",
+      "description": "..."
+    }}
+  ],
+  "projects": [
+    {{
+      "title": "<use repo name or project name>",
+      "description": "<detailed bullet points explaining implementation and technologies>",
+      "technologies": ["tech1", "tech2"],
+      "link": "<repo url>"
+    }}
+  ]
+}}
+
+Rules:
+- Formulate projects based on the GitHub data provided. Make them sound highly technical, emphasizing achievements.
+- Clean up and optimize the skills list.
+- Return ONLY valid JSON, no markdown."""
+
+    try:
+        # Generate content using Gemini fallback service
+        result = await ai_service._call_gemini(prompt, expect_json=True)
+        if not result or "professional_summary" not in result:
+            raise HTTPException(status_code=500, detail="Gemini failed to output valid resume structure.")
+        
+        # Mark previous resumes as not current
+        db.query(Resume).filter(
+            Resume.user_id == current_user_id,
+            Resume.is_current == True
+        ).update({"is_current": False})
+
+        # Save to database
+        new_resume = Resume(
+            user_id=current_user_id,
+            original_filename=f"AI_Synthesized_{request.target_job.replace(' ', '_')}_Resume",
+            created_from="built",
+            template_id=request.template,
+            title=f"{request.target_job} Resume",
+            summary=result.get("professional_summary", ""),
+            parsed_skills=json.dumps(result.get("skills", [])),
+            parsed_education=json.dumps(education),
+            parsed_experience=json.dumps(result.get("experience", [])),
+            parsed_projects=json.dumps(result.get("projects", [])),
+            parsed_certifications=json.dumps([]),
+            is_current=True,
+            version_number=1,
+            file_path="local_db"
+        )
+        
+        db.add(new_resume)
+        db.commit()
+        db.refresh(new_resume)
+        
+        # Calculate initial ATS score
+        ats_analysis = await ai_service.get_ats_score(
+            resume_text=f"{new_resume.title} {new_resume.summary} " + " ".join(result.get("skills", [])),
+            job_description=request.target_job
+        )
+        new_resume.ats_score = ats_analysis.get("score", 70)
+        db.commit()
+
+        return {
+            "status": "success",
+            "resume_id": new_resume.id,
+            "message": "Resume synthesized and stored successfully!",
+            "template": request.template,
+            "ats_score": new_resume.ats_score
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Resume synthesis failed: {str(e)}")

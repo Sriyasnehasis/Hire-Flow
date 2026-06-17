@@ -14,13 +14,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 # ─── Gemini Setup ────────────────────────────────────────────────────────────
+_GEMINI_MODELS = [
+    "gemini-flash-latest",     # Primary (usually 1.5 Flash or newer)
+    "gemini-2.5-flash",        # Fallback 1 (newer Flash)
+    "gemini-1.5-flash",        # Fallback 2 (stable 1.5 Flash)
+    "gemini-2.0-flash",        # Fallback 3 (2.0 Flash)
+    "gemini-2.0-flash-lite",   # Fallback 4 (lightweight)
+    "gemini-1.5-pro",          # Fallback 5 (Pro model)
+]
+
 try:
     import google.generativeai as genai
 
     _api_key = os.getenv("GEMINI_API_KEY", "")
     if _api_key:
         genai.configure(api_key=_api_key)
-        _gemini_model = genai.GenerativeModel("gemini-flash-latest")
         GEMINI_AVAILABLE = True
         logger.info("✅ Gemini API configured successfully")
     else:
@@ -32,28 +40,42 @@ except ImportError:
 
 
 async def _call_gemini(prompt: str, expect_json: bool = True) -> dict | str:
-    """Call Gemini and return parsed JSON or raw text."""
+    """Call Gemini with model fallback rate-limiting protection."""
     import asyncio
 
-    loop = asyncio.get_event_loop()
-    response = await loop.run_in_executor(
-        None,
-        lambda: _gemini_model.generate_content(prompt),
-    )
-    text = response.text.strip()
+    last_error = None
+    for model_name in _GEMINI_MODELS:
+        try:
+            logger.info(f"Attempting to call Gemini with model: {model_name}")
+            model = genai.GenerativeModel(model_name)
+            
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: model.generate_content(prompt),
+            )
+            text = response.text.strip()
+            logger.info(f"✅ Successfully completed Gemini request using model: {model_name}")
+            
+            if not expect_json:
+                return text
 
-    if not expect_json:
-        return text
+            # Strip markdown code fences if present
+            text = re.sub(r"^```(?:json)?\s*", "", text)
+            text = re.sub(r"\s*```$", "", text)
 
-    # Strip markdown code fences if present
-    text = re.sub(r"^```(?:json)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                logger.error(f"Gemini returned non-JSON with model {model_name}: {text[:200]}")
+                return {}
+        except Exception as e:
+            last_error = e
+            logger.warning(f"⚠️  Gemini call failed with model {model_name}: {e}. Retrying with next fallback model...")
 
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        logger.error(f"Gemini returned non-JSON: {text[:200]}")
-        return {}
+    # If all models fail, raise the last exception
+    logger.error("❌ All Gemini models in the fallback chain have failed.")
+    raise last_error or Exception("All Gemini models failed.")
 
 
 # ─── ATS Scorer ──────────────────────────────────────────────────────────────
@@ -354,3 +376,69 @@ Requirements:
     except Exception as e:
         logger.error(f"LinkedIn summary error: {e}")
         return f"Error: {e}"
+
+
+async def generate_outreach_email(
+    user_name: str,
+    user_profession: str,
+    user_skills: list[str],
+    user_resume_snippet: str,
+    contact_name: str,
+    contact_company: str,
+    contact_title: str,
+    past_examples: list[dict] = None
+) -> dict:
+    """Generate an outreach email using Gemini, learning from past template styles."""
+    if not GEMINI_AVAILABLE:
+        subject = f"Inquiry regarding open roles at {contact_company} - {user_name}"
+        body = (
+            f"Dear {contact_name},\n\n"
+            f"I hope this email finds you well.\n\n"
+            f"My name is {user_name}, and I am a {user_profession} specializing in {', '.join(user_skills[:4])}. "
+            f"I have been following {contact_company}'s growth and would love to discuss how my skillset could support your team.\n\n"
+            f"Looking forward to hearing from you.\n\n"
+            f"Best regards,\n"
+            f"{user_name}"
+        )
+        return {"subject": subject, "body": body}
+
+    few_shot_prompt = ""
+    if past_examples:
+        few_shot_prompt = "\nHere are examples of previous successful outreach emails for style reference:\n"
+        for idx, ex in enumerate(past_examples[:3]):
+            few_shot_prompt += f"Example {idx+1}:\nSubject: {ex.get('subject')}\nBody: {ex.get('body')}\n---\n"
+
+    prompt = f"""You are an AI assistant helping a job seeker write a professional outreach email to a recruiter or hiring manager.
+
+Context:
+- Job Seeker Name: {user_name}
+- Profession: {user_profession}
+- Core Skills: {', '.join(user_skills)}
+- Resume highlights: {user_resume_snippet[:1000]}
+
+Recipient:
+- Name: {contact_name}
+- Company: {contact_company}
+- Job Title: {contact_title or 'Hiring Coordinator'}
+{few_shot_prompt}
+Write a concise, compelling email that makes a clear pitch and requests a short intro chat.
+
+Return a JSON object with exactly these fields:
+{{
+  "subject": "<Compelling, professional email subject line>",
+  "body": "<Email body content with proper paragraphs, greetings, and signature>"
+}}
+
+Return ONLY valid JSON, no markdown code fences."""
+
+    try:
+        result = await _call_gemini(prompt, expect_json=True)
+        if result and "subject" in result and "body" in result:
+            return result
+    except Exception as e:
+        logger.error(f"Outreach email generation error: {e}")
+
+    return {
+        "subject": f"Inquiry regarding open roles at {contact_company} - {user_name}",
+        "body": f"Dear {contact_name},\n\nI hope this email finds you well. My name is {user_name}, and I am a {user_profession} interested in opportunities at {contact_company}.\n\nBest regards,\n{user_name}"
+    }

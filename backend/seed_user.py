@@ -1,5 +1,6 @@
 from app.core.db import SessionLocal
 from app.models.user import User
+from app.core.security import security_service
 import datetime
 
 def seed_dev_user():
@@ -12,7 +13,7 @@ def seed_dev_user():
                 id=1,
                 email="test@hireflow.ai",
                 full_name="Candidate",
-                hashed_password="dummy",
+                password_hash=security_service.hash_password("admin123"),
                 is_active=True,
                 resume_text="Senior Full Stack Engineer with expertise in React, Next.js, Node.js, and Python. Experience building scalable web applications and AI-driven platforms.",
                 primary_skills=["React", "Next.js", "Node.js", "Python", "TypeScript", "FastAPI"],

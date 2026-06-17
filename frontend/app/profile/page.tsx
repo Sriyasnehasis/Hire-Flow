@@ -15,7 +15,11 @@ import {
   Save,
   Loader2,
   CheckCircle2,
-  Cpu
+  Cpu,
+  Github,
+  RefreshCw,
+  Star,
+  Trash2
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -43,13 +47,20 @@ export default function ProfilePage() {
     current_status: "Looking for Job" 
   });
 
+  const [githubStats, setGithubStats] = useState<any>(null);
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [syncingGithub, setSyncingGithub] = useState(false);
+
   const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const apiBase = rawApiUrl.endsWith("/api/v1") ? rawApiUrl : `${rawApiUrl}/api/v1`;
 
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const [userRes, dataRes] = await Promise.all([
@@ -59,6 +70,21 @@ export default function ProfilePage() {
 
         if (userRes.ok) setProfile(await userRes.json());
         if (dataRes.ok) setExtendedData(await dataRes.json());
+
+        // Load GitHub stats
+        try {
+          const githubRes = await fetch(`${apiBase}/github/stats`, { headers: { Authorization: `Bearer ${token}` } });
+          if (githubRes.ok) {
+            const githubData = await githubRes.json();
+            if (githubData.connected) {
+              setGithubConnected(true);
+              setGithubStats(githubData.stats);
+            }
+          }
+        } catch (githubErr) {
+          console.error("Failed to load GitHub stats", githubErr);
+        }
+
       } catch (err) {
         console.error("Fetch failed", err);
       } finally {
@@ -67,6 +93,57 @@ export default function ProfilePage() {
     };
     fetchData();
   }, [apiBase]);
+
+  const handleConnectGithub = async () => {
+    try {
+      const response = await fetch(`${apiBase}/github/auth/url`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.auth_url) {
+          window.location.href = data.auth_url;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch GitHub OAuth URL", err);
+    }
+  };
+
+  const handleDisconnectGithub = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`${apiBase}/github/disconnect`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setGithubConnected(false);
+        setGithubStats(null);
+      }
+    } catch (err) {
+      console.error("Failed to disconnect GitHub", err);
+    }
+  };
+
+  const handleSyncGithub = async () => {
+    setSyncingGithub(true);
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`${apiBase}/github/sync`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setGithubStats(data.stats);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to sync GitHub data", err);
+    } finally {
+      setSyncingGithub(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -118,10 +195,10 @@ export default function ProfilePage() {
   };
 
   const tabs = [
-    { id: "identity", label: "Core Identity", icon: User },
-    { id: "academic", label: "Academic Node", icon: GraduationCap },
-    { id: "technical", label: "Technical Mesh", icon: Cpu },
-    { id: "trajectory", label: "Trajectory", icon: Target },
+    { id: "identity", label: "Core Profile", icon: User },
+    { id: "academic", label: "Education", icon: GraduationCap },
+    { id: "technical", label: "Technical Skills", icon: Cpu },
+    { id: "trajectory", label: "Work Experience", icon: Target },
   ];
 
   if (loading) {
@@ -205,25 +282,25 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <h3 className="text-xl font-black text-white uppercase tracking-tight">{profile.full_name || "New Candidate"}</h3>
-                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">Institutional Node: {profile.email}</p>
+                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">Primary Email: {profile.email}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <ProfileInput 
-                        label="Full Legal Name" 
+                        label="Full Name" 
                         value={profile.full_name} 
                         onChange={(v) => setProfile({...profile, full_name: v})} 
                       />
                       <ProfileInput 
-                        label="Professional Alias" 
+                        label="Professional Title" 
                         value={profile.profession || ""} 
                         placeholder="e.g. Senior Software Engineer"
                         onChange={(v) => setProfile({...profile, profession: v})} 
                       />
                       <div className="md:col-span-2">
                          <ProfileTextArea 
-                           label="Identity Narrative (Bio)" 
+                           label="Professional Bio" 
                            value={profile.bio || ""} 
                            onChange={(v) => setProfile({...profile, bio: v})} 
                          />
@@ -238,6 +315,74 @@ export default function ProfilePage() {
                         value={profile.github_url || ""} 
                         onChange={(v) => setProfile({...profile, github_url: v})} 
                       />
+                      
+                      <div className="md:col-span-2 mt-6 p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-white">
+                              <Github size={24} />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-black uppercase tracking-widest text-white">GitHub OAuth Sync</h4>
+                              <p className="text-[10px] text-white/40 mt-1">Connect your account to synchronize technical repositories and skill metadata.</p>
+                            </div>
+                          </div>
+                          
+                          {githubConnected ? (
+                            <div className="flex items-center gap-3">
+                              <button 
+                                type="button"
+                                onClick={handleSyncGithub}
+                                disabled={syncingGithub}
+                                className="px-5 py-2.5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white hover:border-[#00E5FF] hover:text-[#00E5FF] disabled:opacity-50 transition-all flex items-center gap-2"
+                              >
+                                <RefreshCw className={syncingGithub ? "animate-spin" : ""} size={12} />
+                                <span>{syncingGithub ? "Syncing..." : "Sync Metadata"}</span>
+                              </button>
+                              <button 
+                                type="button"
+                                onClick={handleDisconnectGithub}
+                                className="px-5 py-2.5 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-all flex items-center gap-2"
+                              >
+                                <Trash2 size={12} />
+                                <span>Disconnect</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              type="button"
+                              onClick={handleConnectGithub}
+                              className="px-6 py-3 bg-white text-black hover:bg-white/90 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2"
+                            >
+                              <Github size={14} />
+                              <span>Link Account</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {githubConnected && githubStats && (
+                          <div className="mt-6 pt-6 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="flex items-center gap-4">
+                              <img src={githubStats.avatar_url} alt="avatar" className="w-10 h-10 rounded-xl border border-white/10" />
+                              <div>
+                                <h5 className="text-xs font-bold text-white">@{githubStats.username}</h5>
+                                <p className="text-[9px] text-white/40 uppercase tracking-widest mt-0.5">Connected Account</p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col justify-center">
+                              <span className="text-xl font-black text-[#00E5FF]">{githubStats.repositories_count}</span>
+                              <span className="text-[8px] font-bold text-white/20 uppercase tracking-wider mt-1">Repositories Extracted</span>
+                            </div>
+                            <div className="flex flex-col justify-center">
+                              <div className="flex items-center gap-1 text-[#00FFB3]">
+                                <Star size={14} />
+                                <span className="text-xl font-black">{githubStats.total_stars}</span>
+                              </div>
+                              <span className="text-[8px] font-bold text-white/20 uppercase tracking-wider mt-1">Total Stars Captured</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -258,17 +403,17 @@ export default function ProfilePage() {
                 {activeTab === "technical" && (
                   <div className="space-y-8">
                     <div className="space-y-4">
-                       <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.4em]">Active Skill Mesh</label>
-                       <div className="flex flex-wrap gap-3">
-                          {extendedData.primary_skills?.map((skill, i) => (
-                            <span key={i} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold text-[#00FFB3]">
-                               {skill}
-                            </span>
-                          ))}
-                          <button className="px-4 py-2 bg-white/5 border border-dashed border-white/20 rounded-xl text-[10px] font-bold text-white/20 hover:border-[#00E5FF] hover:text-white transition-all">
-                             + Add Node
-                          </button>
-                       </div>
+                        <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.4em]">Active Skills</label>
+                        <div className="flex flex-wrap gap-3">
+                           {extendedData.primary_skills?.map((skill, i) => (
+                             <span key={i} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold text-[#00FFB3]">
+                                {skill}
+                             </span>
+                           ))}
+                           <button className="px-4 py-2 bg-white/5 border border-dashed border-white/20 rounded-xl text-[10px] font-bold text-white/20 hover:border-[#00E5FF] hover:text-white transition-all">
+                              + Add Skill
+                           </button>
+                        </div>
                     </div>
                   </div>
                 )}
@@ -286,7 +431,7 @@ export default function ProfilePage() {
                              <option className="bg-slate-900" value="Looking for Job">Looking for Job</option>
                              <option className="bg-slate-900" value="Open for Internship">Open for Internship</option>
                              <option className="bg-slate-900" value="Freelancing">Freelancing</option>
-                             <option className="bg-slate-900" value="Contractual Node">Contractual Node</option>
+                             <option className="bg-slate-900" value="Contract / Freelance">Contract / Freelance</option>
                           </select>
                        </div>
                        <ProfileInput 
@@ -296,7 +441,7 @@ export default function ProfilePage() {
                        />
                        <div className="md:col-span-2">
                           <ProfileInput 
-                            label="Current/Last Institutional Mesh (Company)" 
+                            label="Current/Last Company" 
                             value={extendedData.current_company || ""} 
                             onChange={(v) => setExtendedData({...extendedData, current_company: v})} 
                           />

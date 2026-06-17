@@ -23,6 +23,7 @@ export default function InterviewsPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("senior_dev");
 
   const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const apiBase = rawApiUrl.endsWith("/api/v1") ? rawApiUrl : `${rawApiUrl}/api/v1`;
@@ -33,7 +34,7 @@ export default function InterviewsPage() {
       const res = await fetch(`${apiBase}/interviews/start-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ role: "senior_dev", interview_type: "voice" }),
+        body: JSON.stringify({ role: selectedRole, interview_type: "voice" }),
       });
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
@@ -90,7 +91,7 @@ export default function InterviewsPage() {
                   <motion.div key={i} animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }} className="w-1 bg-accent rounded-full" />
                 ))}
               </div>
-              Neural Voice Labs
+              Voice Interview Labs
             </div>
             <h1 className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter text-text">
               Voice <span className="outline-text">Coach.</span>
@@ -139,7 +140,7 @@ export default function InterviewsPage() {
 
                 <div className="space-y-8 mb-16 relative z-10">
                    {[
-                     { t: "Confidence Scan", d: "Neural voice patterns analyze stress & logic flow.", i: Mic },
+                     { t: "Confidence Scan", d: "Voice patterns analyze fluency and communication flow.", i: Mic },
                      { t: "Deep Feedback", d: "Real-time diagnostic on behavioral alignment.", i: Terminal },
                    ].map((item, i) => (
                      <div key={i} className="flex gap-8 items-start">
@@ -155,6 +156,28 @@ export default function InterviewsPage() {
                        </div>
                      </div>
                    ))}
+                </div>
+
+                <div className="space-y-3 mb-10 relative z-10 max-w-sm">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] block">
+                    Choose Target Role
+                  </label>
+                  <select
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    className="w-full bg-[var(--bg-raised)] border border-[var(--border)] rounded-xl py-3 px-4 text-xs font-bold text-[var(--text)] focus:outline-none focus:border-[var(--accent)] transition-all"
+                  >
+                    <option value="senior_dev">Senior Developer</option>
+                    <option value="junior_dev">Junior Developer</option>
+                    <option value="devops">DevOps Engineer</option>
+                    <option value="data_scientist">Data Scientist</option>
+                    <option value="product_manager">Product Manager</option>
+                    <option value="fullstack">Fullstack Developer</option>
+                    <option value="sales_executive">Sales Executive</option>
+                    <option value="marketing_specialist">Marketing Specialist</option>
+                    <option value="customer_support">Customer Support Specialist</option>
+                    <option value="hr_specialist">HR Specialist</option>
+                  </select>
                 </div>
 
                 <motion.button
@@ -181,17 +204,24 @@ export default function InterviewsPage() {
                 <div className="glass-card p-8 bg-bg-surface border-border">
                   <h3 className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] mb-10">Recent Logs</h3>
                   <div className="space-y-4">
-                    {[65, 88, 42].map((s, i) => (
+                    {[
+                      { role: "Senior Developer", score: 88, node: "LOG_NODE_102" },
+                      { role: "Data Scientist", score: 65, node: "LOG_NODE_103" },
+                      { role: "Product Manager", score: 42, node: "LOG_NODE_104" },
+                    ].map((log, i) => (
                       <motion.div 
                         key={i} 
                         initial={{ opacity: 0, x: 40 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className={`flex items-center justify-between p-5 bg-bg-raised border-l-2 rounded-xl group hover:bg-bg-raised/80 transition-all
-                          ${s > 80 ? 'border-l-[#1A5C4B]' : s > 60 ? 'border-l-[#C25A1A]' : 'border-l-red-500'}`}
+                        className={`flex items-center justify-between p-5 bg-[var(--bg-raised)] border-l-2 rounded-xl group hover:bg-[var(--bg-raised)]/80 transition-all border-[var(--border)]
+                          ${log.score > 80 ? 'border-l-[var(--accent)]' : log.score > 60 ? 'border-l-[#C25A1A]' : 'border-l-red-500'}`}
                       >
-                        <div className="text-[10px] font-bold text-text-muted tracking-widest">LOG_NODE_{i+102}</div>
-                        <div className={`font-black text-xl tracking-tighter ${s > 80 ? 'text-[#1A5C4B]' : s > 60 ? 'text-[#C25A1A]' : 'text-red-500'}`}>{s}%</div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-[var(--text)]">{log.role}</span>
+                          <span className="text-[8px] font-bold text-[var(--text-muted)] tracking-widest">{log.node}</span>
+                        </div>
+                        <div className={`font-black text-lg tracking-tighter ${log.score > 80 ? 'text-[var(--accent)]' : log.score > 60 ? 'text-[#C25A1A]' : 'text-red-500'}`}>{log.score}%</div>
                       </motion.div>
                     ))}
                   </div>
@@ -209,7 +239,7 @@ export default function InterviewsPage() {
               <div className="flex items-center justify-between mb-12 px-4">
                 <div className="flex items-center gap-4">
                    <div className="w-2 h-2 rounded-full bg-accent shadow-[0_0_10px_var(--accent)] animate-pulse" />
-                   <div className="text-[9px] font-black uppercase tracking-[0.4em] text-text-muted">Neural Link Stable</div>
+                   <div className="text-[9px] font-black uppercase tracking-[0.4em] text-text-muted">Audio Connection Stable</div>
                 </div>
                 <div className="h-px flex-1 mx-10 bg-border" />
                 <div className="text-[10px] font-black text-accent uppercase tracking-[0.3em]">Question #01</div>
@@ -298,7 +328,7 @@ export default function InterviewsPage() {
 
                 <div className="text-center space-y-5">
                   <p className="text-[9px] font-black uppercase tracking-[0.5em] text-text-muted">
-                    {isRecording ? "Neural Stream Incoming" : "Standby for Signal"}
+                    {isRecording ? "Audio stream active" : "Standby for Signal"}
                   </p>
                   
                   {isRecording && (

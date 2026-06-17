@@ -5,7 +5,7 @@ from app.core.security import security_service
 from app.models.job import JobListing
 from app.models.user import User
 from app.models.application import JobApplication, ApplicationStatus
-from app.services.ai_service import get_ats_score
+from app.services.ai_service import get_ats_score, _rule_based_ats
 from app.services.ats_analyzer import ats_analyzer
 from app.services.adzuna import fetch_india_jobs
 from pydantic import BaseModel
@@ -301,7 +301,7 @@ async def get_my_recommendations(
             if not job.description:
                 continue
             
-            analysis = await get_ats_score(user.resume_text, job.description)
+            analysis = _rule_based_ats(user.resume_text, job.description)
             recommendations.append({
                 "job_id": job.id,
                 "title": job.title,
@@ -347,7 +347,7 @@ async def get_recommendations(user_id: int, db: Session = Depends(get_db)):
                     continue
                     
                 # We only need the score for the recommendation list
-                analysis = await get_ats_score(user.resume_text, job.description)
+                analysis = _rule_based_ats(user.resume_text, job.description)
                 recommendations.append({
                     "job_id": job.id,
                     "title": job.title,
